@@ -9,23 +9,7 @@
 // it out of source so we can rotate without a code change and so that App Check
 // is the only thing standing between the public and our Gemini/Firestore quota.
 
-export interface FluentEnvironment {
-  production: boolean;
-  emulators: boolean;
-  firebase: {
-    apiKey: string;
-    authDomain: string;
-    projectId: string;
-    storageBucket: string;
-    messagingSenderId: string;
-    appId: string;
-    measurementId?: string;
-  };
-  googleMapsApiKey: string;
-  googleMapsMapId: string;
-  appCheckSiteKey: string;
-  region: string;
-}
+import { FluentEnvironment } from './fluent-environment';
 
 export const environment: FluentEnvironment = {
   production: false,

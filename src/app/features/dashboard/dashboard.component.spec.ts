@@ -42,17 +42,17 @@ describe('DashboardComponent', () => {
         { provide: MatchmakingService, useValue: matchmakingMock },
       ],
     }).compileComponents();
-
-    fixture = TestBed.createComponent(DashboardComponent);
   });
 
   it('renders the welcome card with the attendee name', () => {
+    fixture = TestBed.createComponent(DashboardComponent);
     fixture.detectChanges();
     const html = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(html).toContain('Alex');
   });
 
   it('triggers matchmaking on init when matches are empty', () => {
+    fixture = TestBed.createComponent(DashboardComponent);
     fixture.detectChanges();
     expect(matchmakingMock.generateMatches).toHaveBeenCalledTimes(1);
   });
@@ -67,6 +67,7 @@ describe('DashboardComponent', () => {
   });
 
   it('refreshMatches() triggers regeneration', () => {
+    fixture = TestBed.createComponent(DashboardComponent);
     fixture.detectChanges();
     matchmakingMock.generateMatches.mockClear();
     fixture.componentInstance.refreshMatches();
@@ -74,6 +75,7 @@ describe('DashboardComponent', () => {
   });
 
   it('shows the loading state when matchmaking is in flight', () => {
+    fixture = TestBed.createComponent(DashboardComponent);
     matchmakingMock.isProcessing.set(true);
     fixture.detectChanges();
     expect((fixture.nativeElement as HTMLElement).querySelector('.loading-state')).not.toBeNull();

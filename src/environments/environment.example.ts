@@ -9,7 +9,7 @@
 // Then fill values from Firebase Console -> Project Settings.
 // NEVER commit either file. App Check enforcement still gates abuse.
 
-import type { FluentEnvironment } from './environment';
+import type { FluentEnvironment } from './fluent-environment';
 
 export const environment: FluentEnvironment = {
   production: false,

@@ -1,7 +1,4 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) 2026 Fluent Project Contributors
-
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { Router, provideRouter } from '@angular/router';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
@@ -55,36 +52,38 @@ describe('RegisterComponent', () => {
     expect(component.registerForm.valid).toBe(true);
   });
 
-  it('registers and navigates to /dashboard after the success delay', fakeAsync(() => {
+  it('registers and navigates to /dashboard after the success delay', async () => {
+    vi.useFakeTimers();
     const spy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
     authMock.register.mockResolvedValue({ uid: 'u1' });
 
     component.registerForm.setValue({
       displayName: 'Alex Smith',
       email: 'alex@example.com',
-      password: STRONG_PASSWORD,
+      password: 'Str0ng!Pass',
     });
 
-    component.onSubmit();
-    tick();
-    expect(authMock.register).toHaveBeenCalledWith('alex@example.com', STRONG_PASSWORD);
+    await component.onSubmit();
+    
+    expect(authMock.register).toHaveBeenCalledWith('alex@example.com', 'Str0ng!Pass');
+    expect(component.successMessage).toMatch(/successful/i);
 
-    tick(1500);
+    vi.advanceTimersByTime(1600);
     expect(spy).toHaveBeenCalledWith(['/dashboard']);
-  }));
+    vi.useRealTimers();
+  });
 
-  it('shows a translated friendly error on registration failure', fakeAsync(() => {
+  it('renders a translated friendly error on registration failure', async () => {
     authMock.register.mockRejectedValue({ code: 'auth/email-already-in-use' });
     component.registerForm.setValue({
-      displayName: 'Alex Smith',
-      email: 'alex@example.com',
-      password: STRONG_PASSWORD,
+      displayName: 'Alex',
+      email: 'ex@example.com',
+      password: 'Str0ng!Pass',
     });
 
-    component.onSubmit();
-    tick();
+    await component.onSubmit();
 
     expect(component.errorMessage).toMatch(/already registered/i);
     expect(component.isLoading).toBe(false);
-  }));
+  });
 });

@@ -14,9 +14,9 @@ describe('passwordValidator', () => {
   it('flags missing uppercase, special char, or digit', () => {
     const ctrl = new FormControl('weakpwd');
     const result = passwordValidator(ctrl) as { passwordStrength: Record<string, boolean> };
-    expect(result.passwordStrength.hasUpperCase).toBe(false);
-    expect(result.passwordStrength.hasSpecialChar).toBe(false);
-    expect(result.passwordStrength.hasNumeric).toBe(false);
+    expect(result.passwordStrength['hasUpperCase']).toBe(false);
+    expect(result.passwordStrength['hasSpecialChar']).toBe(false);
+    expect(result.passwordStrength['hasNumeric']).toBe(false);
   });
 
   it('returns null on empty', () => {
@@ -26,7 +26,7 @@ describe('passwordValidator', () => {
   it('flags too-short passwords', () => {
     const ctrl = new FormControl('A1!a');
     const result = passwordValidator(ctrl) as { passwordStrength: Record<string, boolean> };
-    expect(result.passwordStrength.isValidLength).toBe(false);
+    expect(result.passwordStrength['isValidLength']).toBe(false);
   });
 });
 

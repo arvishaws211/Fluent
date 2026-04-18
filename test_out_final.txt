@@ -1,0 +1,193 @@
+❯ Building...
+✔ Building...
+Initial chunk files                                                 | Names                                                            |  Raw size
+spec-app-features-wayfinding-wayfinding.component.js                | spec-app-features-wayfinding-wayfinding.component                |  33.97 kB | 
+spec-app-features-dashboard-dashboard.component.js                  | spec-app-features-dashboard-dashboard.component                  |  25.07 kB | 
+spec-app-features-auth-login-login.component.js                     | spec-app-features-auth-login-login.component                     |  20.89 kB | 
+spec-app-features-auth-register-register.component.js               | spec-app-features-auth-register-register.component               |  20.72 kB | 
+spec-app-app.js                                                     | spec-app-app                                                     |  19.29 kB | 
+spec-app-features-auth-forgot-password-forgot-password.component.js | spec-app-features-auth-forgot-password-forgot-password.component |  14.74 kB | 
+spec-app-core-services-check-in.service.js                          | spec-app-core-services-check-in.service                          |  11.31 kB | 
+spec-app-core-services-staff-runbook.service.js                     | spec-app-core-services-staff-runbook.service                     |   6.56 kB | 
+chunk-JBWBLPNK.js                                                   | -                                                                |   5.19 kB | 
+chunk-KPCMHDWT.js                                                   | -                                                                |   4.27 kB | 
+styles.css                                                          | styles                                                           |   3.85 kB | 
+chunk-TU3AHPBG.js                                                   | -                                                                |   3.81 kB | 
+spec-app-core-services-auth.service.js                              | spec-app-core-services-auth.service                              |   3.62 kB | 
+spec-app-core-services-ai.service.js                                | spec-app-core-services-ai.service                                |   3.42 kB | 
+chunk-TZAO54EF.js                                                   | -                                                                |   3.17 kB | 
+spec-app-core-services-matchmaking.service.js                       | spec-app-core-services-matchmaking.service                       |   3.07 kB | 
+spec-app-core-services-identity.service.js                          | spec-app-core-services-identity.service                          |   2.89 kB | 
+chunk-I4T35VGE.js                                                   | -                                                                |   2.38 kB | 
+chunk-K7KXHJW3.js                                                   | -                                                                |   2.30 kB | 
+spec-app-core-utils-validators.js                                   | spec-app-core-utils-validators                                   |   2.07 kB | 
+chunk-53GWCOID.js                                                   | -                                                                |   2.00 kB | 
+spec-app-core-services-wayfinding.service.js                        | spec-app-core-services-wayfinding.service                        |   1.77 kB | 
+spec-app-core-guards-auth.guard.js                                  | spec-app-core-guards-auth.guard                                  |   1.69 kB | 
+init-testbed.js                                                     | init-testbed                                                     |   1.21 kB | 
+vitest-mock-patch.js                                                | vitest-mock-patch                                                | 969 bytes | 
+chunk-XYKG7G4W.js                                                   | -                                                                | 898 bytes | 
+setup-test-setup.js                                                 | setup-test-setup                                                 | 398 bytes | 
+
+                                                                    | Initial total                                                    | 201.52 kB
+
+Application bundle generation complete. [1.565 seconds] - 2026-04-18T11:05:25.035Z
+
+
+ RUN  v4.1.4 /Users/vishwasbrahmbhatt/Documents/Antigravity Projects/Fluent
+
+ ✓ |fluent| src/app/core/services/identity.service.spec.ts (5 tests) 28ms
+stderr | src/app/core/services/ai.service.spec.ts > AiService > falls back gracefully on reasoning failure
+[warn] AiService.generateMatchReasoning fallback Error: boom
+    at /Users/vishwasbrahmbhatt/Documents/Antigravity Projects/Fluent/src/app/core/services/ai.service.spec.ts:52:42
+    at file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11
+    at file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26
+    at file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20
+    at new ZoneAwarePromise (/Users/vishwasbrahmbhatt/Documents/Antigravity Projects/Fluent/node_modules/zone.js/fesm2015/zone.js:2221:23)
+    at runWithCancel (file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)
+    at file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20
+    at new ZoneAwarePromise (/Users/vishwasbrahmbhatt/Documents/Antigravity Projects/Fluent/node_modules/zone.js/fesm2015/zone.js:2221:23)
+    at runWithTimeout (file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:10)
+    at file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:2955:64
+
+stderr | src/app/core/services/ai.service.spec.ts > AiService > falls back to a per-partner stub on batch failure
+[warn] AiService.generateBatchMatches fallback Error: cold
+    at /Users/vishwasbrahmbhatt/Documents/Antigravity Projects/Fluent/src/app/core/services/ai.service.spec.ts:75:44
+    at file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11
+    at file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26
+    at file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20
+    at new ZoneAwarePromise (/Users/vishwasbrahmbhatt/Documents/Antigravity Projects/Fluent/node_modules/zone.js/fesm2015/zone.js:2221:23)
+    at runWithCancel (file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)
+    at file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20
+    at new ZoneAwarePromise (/Users/vishwasbrahmbhatt/Documents/Antigravity Projects/Fluent/node_modules/zone.js/fesm2015/zone.js:2221:23)
+    at runWithTimeout (file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:10)
+    at file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:2955:64
+
+stderr | src/app/core/services/ai.service.spec.ts > AiService > returns a noise-aware fallback when the function fails
+[warn] AiService.getSensoryAdvice fallback Error: cold
+    at /Users/vishwasbrahmbhatt/Documents/Antigravity Projects/Fluent/src/app/core/services/ai.service.spec.ts:90:41
+    at file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11
+    at file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26
+    at file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20
+    at new ZoneAwarePromise (/Users/vishwasbrahmbhatt/Documents/Antigravity Projects/Fluent/node_modules/zone.js/fesm2015/zone.js:2221:23)
+    at runWithCancel (file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)
+    at file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20
+    at new ZoneAwarePromise (/Users/vishwasbrahmbhatt/Documents/Antigravity Projects/Fluent/node_modules/zone.js/fesm2015/zone.js:2221:23)
+    at runWithTimeout (file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:10)
+    at file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:2955:64
+
+stderr | src/app/core/services/ai.service.spec.ts > AiService > returns a noise-aware fallback when the function fails
+[warn] AiService.getSensoryAdvice fallback Error: cold
+    at /Users/vishwasbrahmbhatt/Documents/Antigravity Projects/Fluent/src/app/core/services/ai.service.spec.ts:90:41
+    at file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11
+    at file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26
+    at file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20
+    at new ZoneAwarePromise (/Users/vishwasbrahmbhatt/Documents/Antigravity Projects/Fluent/node_modules/zone.js/fesm2015/zone.js:2221:23)
+    at runWithCancel (file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)
+    at file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20
+    at new ZoneAwarePromise (/Users/vishwasbrahmbhatt/Documents/Antigravity Projects/Fluent/node_modules/zone.js/fesm2015/zone.js:2221:23)
+    at runWithTimeout (file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:10)
+    at file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:2955:64
+
+ ✓ |fluent| src/app/core/services/ai.service.spec.ts (6 tests) 34ms
+ ✓ |fluent| src/app/core/services/wayfinding.service.spec.ts (5 tests) 6ms
+ ✓ |fluent| src/app/core/services/check-in.service.spec.ts (9 tests) 53ms
+ ✓ |fluent| src/app/core/services/auth.service.spec.ts (6 tests) 40ms
+ ✓ |fluent| src/app/core/services/staff-runbook.service.spec.ts (5 tests) 7ms
+stderr | src/app/core/utils/validators.spec.ts > getFirebaseErrorMessage > falls back to a generic message for unknown codes
+Unhandled Auth error: auth/something-novel
+
+stderr | src/app/core/utils/validators.spec.ts > getFirebaseErrorMessage > handles empty / undefined codes safely
+Unhandled Auth error: 
+
+ ✓ |fluent| src/app/core/utils/validators.spec.ts (9 tests) 2ms
+ ❯ |fluent| src/app/features/wayfinding/wayfinding.component.spec.ts (0 test)
+stderr | src/app/core/services/matchmaking.service.spec.ts > MatchmakingService > surfaces a friendly error when the function rejects
+[error] matchmaking.generate Error: boom
+    at /Users/vishwasbrahmbhatt/Documents/Antigravity Projects/Fluent/src/app/core/services/matchmaking.service.spec.ts:79:55
+    at file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11
+    at file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26
+    at file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20
+    at new ZoneAwarePromise (/Users/vishwasbrahmbhatt/Documents/Antigravity Projects/Fluent/node_modules/zone.js/fesm2015/zone.js:2221:23)
+    at runWithCancel (file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)
+    at file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20
+    at new ZoneAwarePromise (/Users/vishwasbrahmbhatt/Documents/Antigravity Projects/Fluent/node_modules/zone.js/fesm2015/zone.js:2221:23)
+    at runWithTimeout (file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:10)
+    at file:///Users/vishwasbrahmbhatt/Documents/Antigravity%20Projects/Fluent/node_modules/@vitest/runner/dist/chunk-artifact.js:2955:64
+
+ ✓ |fluent| src/app/core/services/matchmaking.service.spec.ts (4 tests) 20ms
+ ✓ |fluent| src/app/core/guards/auth.guard.spec.ts (2 tests) 16ms
+ ❯ |fluent| src/app/features/auth/forgot-password/forgot-password.component.spec.ts (0 test)
+ ❯ |fluent| src/app/features/auth/login/login.component.spec.ts (0 test)
+ ❯ |fluent| src/app/features/auth/register/register.component.spec.ts (0 test)
+ ✓ |fluent| src/app/features/dashboard/dashboard.component.spec.ts (5 tests) 118ms
+ ✓ |fluent| src/app/app.spec.ts (6 tests) 126ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |fluent| src/app/features/wayfinding/wayfinding.component.spec.ts [ src/app/features/wayfinding/wayfinding.component.spec.ts ]
+Error: zone-testing.js is needed for the fakeAsync() test helper but could not be found.
+        Please make sure that your environment includes zone.js/testing
+ ❯ withFakeAsyncTestModule ../../Antigravity%20Projects/Fluent/node_modules/@angular/core/fesm2022/testing.mjs:297:11
+ ❯ Module.fakeAsync ../../Antigravity%20Projects/Fluent/node_modules/@angular/core/fesm2022/testing.mjs:311:10
+ ❯ src/app/features/wayfinding/wayfinding.component.spec.ts:90:56
+     88|   });
+     89|
+     90|   it('initializes the Map and marks loading complete', fakeAsync(() =>…
+       |                                                        ^
+     91|     tick();
+     92|     tick();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  |fluent| src/app/features/auth/forgot-password/forgot-password.component.spec.ts [ src/app/features/auth/forgot-password/forgot-password.component.spec.ts ]
+Error: zone-testing.js is needed for the fakeAsync() test helper but could not be found.
+        Please make sure that your environment includes zone.js/testing
+ ❯ withFakeAsyncTestModule ../../Antigravity%20Projects/Fluent/node_modules/@angular/core/fesm2022/testing.mjs:297:11
+ ❯ fakeAsync ../../Antigravity%20Projects/Fluent/node_modules/@angular/core/fesm2022/testing.mjs:311:10
+ ❯ src/app/features/auth/forgot-password/forgot-password.component.spec.ts:35:43
+     33|   });
+     34|
+     35|   it('marks the form as sent on success', fakeAsync(() => {
+       |                                           ^
+     36|     authMock.resetPassword.mockResolvedValue(undefined);
+     37|     component.forgotForm.setValue({ email: 'test@example.com' });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  |fluent| src/app/features/auth/register/register.component.spec.ts [ src/app/features/auth/register/register.component.spec.ts ]
+Error: zone-testing.js is needed for the fakeAsync() test helper but could not be found.
+        Please make sure that your environment includes zone.js/testing
+ ❯ withFakeAsyncTestModule ../../Antigravity%20Projects/Fluent/node_modules/@angular/core/fesm2022/testing.mjs:297:11
+ ❯ fakeAsync ../../Antigravity%20Projects/Fluent/node_modules/@angular/core/fesm2022/testing.mjs:311:10
+ ❯ src/app/features/auth/register/register.component.spec.ts:58:71
+     56|   });
+     57|
+     58|   it('registers and navigates to /dashboard after the success delay', …
+       |                                                                       ^
+     59|     const spy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+     60|     authMock.register.mockResolvedValue({ uid: 'u1' });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  |fluent| src/app/features/auth/login/login.component.spec.ts [ src/app/features/auth/login/login.component.spec.ts ]
+Error: zone-testing.js is needed for the fakeAsync() test helper but could not be found.
+        Please make sure that your environment includes zone.js/testing
+ ❯ withFakeAsyncTestModule ../../Antigravity%20Projects/Fluent/node_modules/@angular/core/fesm2022/testing.mjs:297:11
+ ❯ fakeAsync ../../Antigravity%20Projects/Fluent/node_modules/@angular/core/fesm2022/testing.mjs:311:10
+ ❯ src/app/features/auth/login/login.component.spec.ts:53:67
+     51|   });
+     52|
+     53|   it('signs in and routes to /dashboard after the success delay', fake…
+       |                                                                   ^
+     54|     const spy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+     55|     authMock.login.mockResolvedValue({ uid: 'u1' });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  4 failed | 11 passed (15)
+      Tests  62 passed (62)
+   Start at  16:35:25
+   Duration  1.67s (transform 612ms, setup 2.97s, import 1.29s, tests 450ms, environment 10.76s)
+

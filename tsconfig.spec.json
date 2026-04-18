@@ -5,10 +5,12 @@
   "compilerOptions": {
     "outDir": "./out-tsc/spec",
     "types": [
-      "vitest/globals"
+      "vitest/globals",
+      "google.maps"
     ]
   },
   "include": [
+    "src/test-setup.ts",
     "src/**/*.d.ts",
     "src/**/*.spec.ts"
   ]

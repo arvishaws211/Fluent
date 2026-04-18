@@ -1,7 +1,4 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) 2026 Fluent Project Contributors
-
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { WayfindingComponent } from './wayfinding.component';
@@ -21,10 +18,16 @@ const mockMarker: { addListener: ReturnType<typeof vi.fn>; map: unknown } = {
 
 const mockGoogle = {
   maps: {
-    Map: vi.fn(() => mockMap),
+    Map: vi.fn().mockImplementation(function() {
+      return mockMap;
+    }),
     marker: {
-      AdvancedMarkerElement: vi.fn(() => mockMarker),
-      PinElement: vi.fn(() => ({ element: {} })),
+      AdvancedMarkerElement: vi.fn().mockImplementation(function() {
+        return mockMarker;
+      }),
+      PinElement: vi.fn().mockImplementation(function() {
+        return { element: {} };
+      }),
     },
   },
 };
@@ -43,6 +46,9 @@ vi.mock('@googlemaps/js-api-loader', () => ({
   }),
 }));
 
+
+import { environment } from '../../../environments/environment';
+
 describe('WayfindingComponent', () => {
   let component: WayfindingComponent;
   let fixture: ComponentFixture<WayfindingComponent>;
@@ -54,6 +60,9 @@ describe('WayfindingComponent', () => {
   let aiMock: { getSensoryAdvice: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
+    // Override environment for test
+    environment.googleMapsApiKey = 'mock-key';
+    
     Object.values(mockMap).forEach((fn) => (fn as ReturnType<typeof vi.fn>).mockClear?.());
     mockMarker.addListener.mockClear();
     mockMarker.map = null;
@@ -81,50 +90,54 @@ describe('WayfindingComponent', () => {
     fixture = TestBed.createComponent(WayfindingComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
+    
+    // Wait for the async initMap to finish
+    let attempts = 0;
+    while (component.isLoading() && attempts < 100) {
+      await new Promise(r => setTimeout(r, 10));
+      fixture.detectChanges();
+      attempts++;
+    }
   });
 
   it('creates the component', () => {
     expect(component).toBeTruthy();
   });
 
-  it('initializes the Map and marks loading complete', fakeAsync(() => {
-    tick();
-    tick();
+  it('initializes the Map and marks loading complete', async () => {
+    await fixture.whenStable();
     expect(mockGoogle.maps.Map).toHaveBeenCalled();
     expect(component.isLoading()).toBe(false);
-  }));
+  });
 
   it('toggleSensory delegates to the wayfinding service', () => {
     component.toggleSensory();
     expect(wayfindingMock.toggleSensoryMode).toHaveBeenCalled();
   });
 
-  it('adds an advanced marker per zone after the map loads', fakeAsync(() => {
-    tick();
-    tick();
+  it('adds an advanced marker per zone after the map loads', async () => {
+    await fixture.whenStable();
     expect(mockGoogle.maps.marker.AdvancedMarkerElement).toHaveBeenCalledTimes(2);
-  }));
+  });
 
-  it('focusZone pans the map and asks the AI for sensory advice', fakeAsync(() => {
-    tick();
-    tick();
-    const zone = { id: 'zone1', center: { lat: 0, lng: 0 }, noiseLevel: 10 };
-    component.focusZone(zone);
-    tick();
+  it('focusZone pans the map and asks the AI for sensory advice', async () => {
+    await fixture.whenStable();
+    const zone = { id: 'zone1', center: { lat: 0, lng: 0 }, noiseLevel: 10, radius: 50, crowdDensity: 0.2, isQuietZone: true };
+    await component.focusZone(zone);
+    await fixture.whenStable();
 
     expect(component.selectedRoom()).toBe('zone1');
     expect(mockMap.panTo).toHaveBeenCalledWith(zone.center);
     expect(mockMap.setZoom).toHaveBeenCalledWith(19);
     expect(aiMock.getSensoryAdvice).toHaveBeenCalledWith('zone1', 10);
-  }));
+  });
 
-  it('hides non-quiet markers when sensory mode is enabled', fakeAsync(() => {
-    tick();
-    tick();
+  it('hides non-quiet markers when sensory mode is enabled', async () => {
+    await fixture.whenStable();
     wayfindingMock.sensoryModeEnabled.set(true);
     fixture.detectChanges();
-    tick();
+    await fixture.whenStable();
     // The non-quiet marker (zone2) should have its map property cleared.
     expect(mockMarker.map).toBeNull();
-  }));
+  });
 });

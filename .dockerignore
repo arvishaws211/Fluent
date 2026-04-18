@@ -1,0 +1,9 @@
+node_modules
+dist
+.angular
+.git
+.github
+.vscode
+e2e
+*.md
+test_out*.txt

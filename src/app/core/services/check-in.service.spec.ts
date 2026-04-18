@@ -39,6 +39,7 @@ describe('CheckInService', () => {
       generateVerifiablePresentation: vi.fn().mockResolvedValue('vp.token'),
     };
     Object.defineProperty(globalThis.navigator, 'onLine', { configurable: true, get: () => true });
+    Object.defineProperty(globalThis.navigator, 'credentials', { configurable: true, value: {} });
 
     TestBed.configureTestingModule({
       providers: [

@@ -1,7 +1,4 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) 2026 Fluent Project Contributors
-
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { provideRouter } from '@angular/router';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
@@ -32,26 +29,24 @@ describe('ForgotPasswordComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('marks the form as sent on success', fakeAsync(() => {
+  it('marks the form as sent on success', async () => {
     authMock.resetPassword.mockResolvedValue(undefined);
     component.forgotForm.setValue({ email: 'test@example.com' });
 
-    component.onSubmit();
-    tick();
+    await component.onSubmit();
 
     expect(authMock.resetPassword).toHaveBeenCalledWith('test@example.com');
     expect(component.isSent).toBe(true);
     expect(component.errorMessage).toBe('');
-  }));
+  });
 
-  it('renders a translated friendly error when the reset call fails', fakeAsync(() => {
+  it('renders a translated friendly error when the reset call fails', async () => {
     authMock.resetPassword.mockRejectedValue({ code: 'auth/user-not-found' });
     component.forgotForm.setValue({ email: 'unknown@example.com' });
 
-    component.onSubmit();
-    tick();
+    await component.onSubmit();
 
     expect(component.errorMessage).toMatch(/Invalid email or password/i);
     expect(component.isSent).toBe(false);
-  }));
+  });
 });
