@@ -8,9 +8,17 @@ import { provideHttpClient, withFetch } from '@angular/common/http';
 import { provideServiceWorker } from '@angular/service-worker';
 
 import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
-import { getAuth, provideAuth } from '@angular/fire/auth';
-import { getFirestore, provideFirestore, connectFirestoreEmulator } from '@angular/fire/firestore';
-import { getFunctions, provideFunctions, connectFunctionsEmulator } from '@angular/fire/functions';
+import { getAuth, provideAuth, connectAuthEmulator } from '@angular/fire/auth';
+import {
+  connectFirestoreEmulator,
+  getFirestore,
+  provideFirestore,
+} from '@angular/fire/firestore';
+import {
+  connectFunctionsEmulator,
+  getFunctions,
+  provideFunctions,
+} from '@angular/fire/functions';
 import {
   initializeAppCheck,
   provideAppCheck,
@@ -19,40 +27,105 @@ import {
 
 import { routes } from './app.routes';
 import { environment } from '../environments/environment';
+import { logger } from './core/utils/logger';
+import { validateEnvironment } from './core/utils/env-validator';
 
 /**
  * App configuration wires the providers so each Firebase product can be
  * injected anywhere via `inject()`. Order matters: App Check must initialize
  * after the FirebaseApp but before any product that relies on attestation.
  *
- * Emulator hosts are wired only when `environment.emulators === true`. We use
- * sentinel values that fail loudly if the emulator suite is not running, which
- * is preferable to silently falling back to production.
+ * Resilience contract:
+ *
+ *  - If `appCheckSiteKey` is missing or a build-time placeholder, we SKIP
+ *    `initializeAppCheck` entirely rather than construct a
+ *    `ReCaptchaEnterpriseProvider('')` which throws `recaptcha/sitekey-missing`.
+ *    The app still boots in a degraded mode; Firebase calls will succeed in
+ *    the Firebase console's "unenforced" configuration and fail cleanly
+ *    elsewhere.
+ *
+ *  - The Firebase config itself is validated via `validateEnvironment`;
+ *    if `apiKey` is a placeholder we bail out of `initializeApp` with a
+ *    loud error so the user sees the fix instructions immediately instead
+ *    of `auth/api-error` later.
  */
+const envCheck = validateEnvironment(environment);
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZonelessChangeDetection(),
     provideHttpClient(withFetch()),
     provideRouter(
       routes,
-      withInMemoryScrolling({ scrollPositionRestoration: 'top', anchorScrolling: 'enabled' })
+      withInMemoryScrolling({ scrollPositionRestoration: 'top', anchorScrolling: 'enabled' }),
     ),
 
-    provideFirebaseApp(() => initializeApp(environment.firebase)),
+    provideFirebaseApp(() => {
+      if (!envCheck.hasAuth) {
+        logger.error(
+          'firebase.init blocked — firebase config contains placeholders. ' +
+            'Auth/Firestore/Functions will NOT work until .env is populated and the build is re-run.',
+          { problems: envCheck.problems },
+        );
+      }
+      return initializeApp(environment.firebase);
+    }),
 
     provideAppCheck(() => {
-      if (environment.emulators) {
-        // Local debug token for emulators; the SDK reads this global.
-        // Production builds never enter this branch.
-        (globalThis as Record<string, unknown>)['FIREBASE_APPCHECK_DEBUG_TOKEN'] = true;
+      const g = globalThis as Record<string, unknown>;
+      const wantsDebug = environment.emulators || !envCheck.hasAppCheck;
+
+      if (wantsDebug) {
+        // Local debug token for emulators or for the "no site key yet" case.
+        // Production with a real key never enters this branch.
+        g['FIREBASE_APPCHECK_DEBUG_TOKEN'] = true;
+        if (!envCheck.hasAppCheck) {
+          logger.warn(
+            'appCheck.skipped — APP_CHECK_SITE_KEY is missing. Using debug token fallback. ' +
+              'Enable enforcement in Firebase console only AFTER setting a real reCAPTCHA Enterprise key.',
+          );
+        }
+      } else {
+        // Defensive reset. Prior dev sessions (e.g. when .env was empty) may
+        // have set this global to `true`, which the Firebase SDK persists
+        // transitively via an IndexedDB entry. Without this cleanup the SDK
+        // would keep exchanging a debug UUID that Firebase never authorized
+        // (403 from exchangeDebugToken -> auth/api-error cascade once
+        // enforcement is enabled). Explicitly clearing both the global and
+        // the on-disk cache forces the real reCAPTCHA Enterprise path.
+        if (g['FIREBASE_APPCHECK_DEBUG_TOKEN'] !== undefined) {
+          logger.warn(
+            'appCheck.debugTokenReset — cleared stale FIREBASE_APPCHECK_DEBUG_TOKEN global left over from a previous dev session.',
+          );
+        }
+        delete g['FIREBASE_APPCHECK_DEBUG_TOKEN'];
+        if (typeof indexedDB !== 'undefined') {
+          try {
+            indexedDB.deleteDatabase('firebase-app-check-database');
+          } catch {
+            // Non-fatal. Some browsers throw if the db is locked; the SDK
+            // will simply regenerate on next run.
+          }
+        }
       }
+
       return initializeAppCheck(undefined, {
-        provider: new ReCaptchaEnterpriseProvider(environment.appCheckSiteKey),
+        provider: new ReCaptchaEnterpriseProvider(
+          envCheck.hasAppCheck ? environment.appCheckSiteKey : 'debug',
+        ),
         isTokenAutoRefreshEnabled: true,
       });
     }),
 
-    provideAuth(() => getAuth()),
+    provideAuth(() => {
+      const auth = getAuth();
+      if (environment.emulators) {
+        // disableWarnings keeps the console clean when running against the
+        // emulator; it's loud by default which clutters the dev signal.
+        connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+      }
+      return auth;
+    }),
 
     provideFirestore(() => {
       const db = getFirestore();

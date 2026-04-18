@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "scripts": {
     "ng": "ng",
+    "setup:env": "node scripts/setup-env.mjs",
+    "doctor": "node scripts/doctor.mjs",
     "prestart": "node scripts/setup-env.mjs",
     "start": "ng serve",
     "prebuild": "node scripts/setup-env.mjs",

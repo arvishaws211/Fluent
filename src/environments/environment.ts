@@ -5,11 +5,17 @@
 // Local developers create `environment.local.ts` (gitignored) overriding these
 // values; CI/CD substitutes via `fileReplacements` defined in `angular.json`.
 //
-// Firebase web config is *technically* identifier-not-secret, but we still keep
-// it out of source so we can rotate without a code change and so that App Check
-// is the only thing standing between the public and our Gemini/Firestore quota.
+// Firebase web config is *technically* identifier-not-secret, but we still
+// keep it out of source so we can rotate without a code change and so that
+// App Check is the only thing standing between the public and our
+// Gemini/Firestore quota.
+//
+// The `FluentEnvironment` interface lives in `./types.ts` because that file
+// is NOT subject to `fileReplacements`; see types.ts for the rationale.
 
-import { FluentEnvironment } from './fluent-environment';
+import type { FluentEnvironment } from './types';
+
+export type { FluentEnvironment };
 
 export const environment: FluentEnvironment = {
   production: false,
