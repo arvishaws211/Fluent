@@ -1,288 +1,240 @@
-import { Component, inject, signal } from '@angular/core';
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Fluent Project Contributors
+
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  OnDestroy,
+  ViewChild,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { CheckInService } from '../../core/services/check-in.service';
 
 @Component({
   selector: 'app-check-in',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   template: `
-    <div class="check-in-container animate-fade-in">
+    <section class="check-in-container animate-fade-in" aria-labelledby="check-in-heading">
       <header class="page-header">
-        <h2 class="gradient-text">Express Check-in</h2>
-        <p class="text-secondary">Avoid the queues. Verify your identity securely using SSI.</p>
+        <h2 id="check-in-heading" class="gradient-text">Express Check-in</h2>
+        <p class="text-secondary">Skip the queue. Verify your identity using a biometric, QR pass, or pass code.</p>
       </header>
 
       <div class="check-in-modes">
-        <!-- Main Scanner Area -->
-        <main class="scanner-section glass-card" [class.success]="status()?.success">
-          <div class="scanner-viewport glass" *ngIf="!status()?.success; else successView">
-            <div class="scanner-overlay">
-              <div class="scan-frame"></div>
-              <div class="scan-line" *ngIf="isScanning()"></div>
-            </div>
-            
-            <div class="scanner-label">
-              <span *ngIf="!isScanning()">Ready to Scan</span>
-              <span *ngIf="isScanning()" class="pulse">Analyzing Biometrics...</span>
-            </div>
+        <div class="scanner-section glass-card" [class.success]="checkedIn()">
+          <div class="mode-tabs" role="tablist" aria-label="Check-in method">
+            <button type="button" role="tab" class="mode-tab"
+                    [class.active]="mode() === 'biometric'"
+                    [attr.aria-selected]="mode() === 'biometric'"
+                    (click)="setMode('biometric')">
+              Biometric
+            </button>
+            <button type="button" role="tab" class="mode-tab"
+                    [class.active]="mode() === 'qr'"
+                    [attr.aria-selected]="mode() === 'qr'"
+                    (click)="setMode('qr')">
+              QR Scan
+            </button>
+            <button type="button" role="tab" class="mode-tab"
+                    [class.active]="mode() === 'manual'"
+                    [attr.aria-selected]="mode() === 'manual'"
+                    (click)="setMode('manual')">
+              Manual
+            </button>
           </div>
 
-          <ng-template #successView>
-            <div class="success-animation">
-              <div class="checkmark-circle">
-                <div class="checkmark draw"></div>
+          <div class="scanner-viewport glass" *ngIf="!checkedIn()">
+            <ng-container [ngSwitch]="mode()">
+              <div *ngSwitchCase="'biometric'" class="biometric-pane" role="region" aria-labelledby="bio-label">
+                <p id="bio-label" class="text-secondary">
+                  Tap the button to use Touch ID, Face ID, or your security key.
+                </p>
+                <button type="button" class="btn btn-primary"
+                        [disabled]="isScanning()"
+                        (click)="startBiometric()">
+                  {{ isScanning() ? 'Verifying…' : 'Start biometric check-in' }}
+                </button>
+                <p *ngIf="!biometricSupported" class="hint" role="note">
+                  This device does not support WebAuthn. Please use the QR or Manual tab.
+                </p>
               </div>
-              <h3>Check-in Successful</h3>
-              <p>Welcome to Fluent 2026</p>
-              <div class="pass-details glass">
-                <div class="detail">
-                  <span class="label">Method</span>
-                  <span class="value">{{ status()?.method | titlecase }}</span>
-                </div>
-                <div class="detail">
-                  <span class="label">Verified via</span>
-                  <span class="value">SSI Vault</span>
+
+              <div *ngSwitchCase="'qr'" class="qr-pane">
+                <video #qrVideo class="qr-video" muted playsinline aria-label="Live camera feed for QR scanning"></video>
+                <div class="scanner-controls">
+                  <button type="button" class="btn btn-primary"
+                          [disabled]="isScanning()"
+                          (click)="startQr()">
+                    {{ isScanning() ? 'Watching for pass…' : 'Start QR scan' }}
+                  </button>
+                  <button type="button" class="btn btn-outline" *ngIf="isScanning()" (click)="stopQr()">Stop</button>
                 </div>
               </div>
-              <button class="btn btn-primary" (click)="reset()">Done</button>
+
+              <div *ngSwitchCase="'manual'" class="manual-pane">
+                <label for="manual-pass" class="text-secondary">Enter the pass code printed on your ticket.</label>
+                <input id="manual-pass" type="text" class="glass-input"
+                       [(ngModel)]="manualCode" placeholder="e.g. PASS-1234"
+                       autocomplete="off" inputmode="text" />
+                <button type="button" class="btn btn-primary"
+                        [disabled]="!manualCode || isScanning()"
+                        (click)="startManual()">
+                  Submit pass code
+                </button>
+              </div>
+            </ng-container>
+          </div>
+
+          <div *ngIf="checkedIn()" class="success-animation" role="status" aria-live="polite">
+            <div class="checkmark-circle" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24"
+                   fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
             </div>
-          </ng-template>
+            <h3>Check-in successful</h3>
+            <p>Welcome to Fluent.</p>
+            <dl class="pass-details glass">
+              <div class="detail">
+                <dt class="label">Method</dt>
+                <dd class="value">{{ status()?.method | titlecase }}</dd>
+              </div>
+              <div class="detail">
+                <dt class="label">Verified via</dt>
+                <dd class="value">SSI Vault</dd>
+              </div>
+            </dl>
+            <button type="button" class="btn btn-primary" (click)="reset()">Done</button>
+          </div>
 
-          <footer class="scanner-controls" *ngIf="!status()?.success">
-            <button class="btn btn-primary" (click)="startBiometric()" [disabled]="isScanning()">
-              <span>Check-in with Biometrics</span>
-            </button>
-            <button class="btn btn-outline" (click)="startQR()" [disabled]="isScanning()">
-              <span>Scan QR Pass</span>
-            </button>
-          </footer>
-        </main>
+          <div class="check-in-status" aria-live="polite" role="status">
+            <p *ngIf="status() && !status()?.success" class="error-box">
+              {{ status()?.errorMessage }}
+            </p>
+          </div>
+        </div>
 
-        <!-- Sidebar / Guidance -->
-        <aside class="guidance-section glass-card">
-          <h3>Self-Sovereign Identity</h3>
+        <aside class="guidance-section glass-card" aria-labelledby="ssi-heading">
+          <h3 id="ssi-heading">Self-Sovereign Identity</h3>
           <p class="text-secondary">Your data never leaves your device. We only verify the cryptographic proof of your identity.</p>
-          
-          <div class="guidance-steps">
-            <div class="step">
-              <div class="step-num">1</div>
-              <p>Select check-in method</p>
-            </div>
-            <div class="step">
-              <div class="step-num">2</div>
-              <p>Scan your face or QR pass</p>
-            </div>
-            <div class="step">
-              <div class="step-num">3</div>
-              <p>Unlock your personalized experience</p>
-            </div>
-          </div>
-
-          <div class="fallback-links">
-            <p>Issues scanning? <a class="gradient-text">Manual entry</a></p>
-          </div>
+          <ol class="guidance-steps">
+            <li>Pick a check-in method.</li>
+            <li>Approve the prompt on your device.</li>
+            <li>Your pass unlocks the personalized experience.</li>
+          </ol>
         </aside>
       </div>
-    </div>
+    </section>
   `,
   styles: [`
-    .check-in-container {
-      max-width: 1000px;
-      margin: 0 auto;
+    .check-in-container { max-width: 1000px; margin: 0 auto; }
+    .page-header { margin-bottom: 32px; text-align: center; }
+    .check-in-modes { display: grid; grid-template-columns: 1fr 320px; gap: 32px; }
+    .scanner-section { padding: 32px; min-height: 460px; transition: all .3s; }
+    .scanner-section.success { border-color: var(--accent); background: rgba(16,185,129,.05); }
+
+    .mode-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+    .mode-tab {
+      flex: 1; padding: 10px 16px; border-radius: var(--radius-md);
+      background: var(--glass-bg); border: 1px solid var(--glass-border);
+      color: var(--text-secondary); cursor: pointer; font-weight: 500;
+    }
+    .mode-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+    .mode-tab:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+    .scanner-viewport { padding: 24px; border-radius: var(--radius-lg); }
+    .biometric-pane, .manual-pane, .qr-pane {
+      display: flex; flex-direction: column; gap: 16px; align-items: stretch;
+    }
+    .qr-video { width: 100%; max-height: 320px; border-radius: var(--radius-md); background: #000; }
+    .scanner-controls { display: flex; gap: 12px; }
+    .glass-input {
+      padding: 12px 16px; border-radius: var(--radius-md);
+      background: rgba(255,255,255,.05); border: 1px solid var(--glass-border);
+      color: var(--text-primary);
+    }
+    .hint { font-size: .85rem; color: var(--warning); }
+
+    .check-in-status { margin-top: 16px; min-height: 1.5rem; }
+    .error-box {
+      color: #ff6b6b; padding: 12px;
+      background: rgba(255, 107, 107, 0.1);
+      border-radius: var(--radius-md);
+      font-size: .85rem;
     }
 
-    .page-header {
-      margin-bottom: 40px;
-      text-align: center;
-    }
-
-    .check-in-modes {
-      display: grid;
-      grid-template-columns: 1fr 320px;
-      gap: 32px;
-    }
-
-    .scanner-section {
-      min-height: 500px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      padding: 40px;
-      transition: all 0.5s ease;
-    }
-
-    .scanner-section.success {
-      border-color: var(--accent);
-      background: rgba(16, 185, 129, 0.05);
-    }
-
-    .scanner-viewport {
-      flex: 1;
-      position: relative;
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-      background: #000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 32px;
-    }
-
-    .scan-frame {
-      width: 250px;
-      height: 250px;
-      border: 2px solid rgba(99, 102, 241, 0.5);
-      border-radius: 40px;
-      position: relative;
-    }
-
-    .scan-frame::before, .scan-frame::after {
-      content: '';
-      position: absolute;
-      width: 40px;
-      height: 40px;
-      border-color: var(--primary);
-      border-style: solid;
-    }
-
-    /* Target Corners */
-    .scan-frame {
-      box-shadow: 0 0 0 1000px rgba(0,0,0,0.5);
-    }
-
-    .scan-line {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 2px;
-      background: var(--primary);
-      box-shadow: 0 0 15px var(--primary);
-      animation: scan 2s linear infinite;
-    }
-
-    @keyframes scan {
-      0% { top: 20%; }
-      50% { top: 80%; }
-      100% { top: 20%; }
-    }
-
-    .scanner-label {
-      position: absolute;
-      bottom: 24px;
-      font-weight: 600;
-      color: var(--text-secondary);
-    }
-
-    .pulse {
-      animation: pulse 1.5s infinite;
-      color: var(--primary);
-    }
-
-    @keyframes pulse {
-      0% { opacity: 0.5; }
-      50% { opacity: 1; }
-      100% { opacity: 0.5; }
-    }
-
-    .scanner-controls {
-      display: flex;
-      gap: 16px;
-      justify-content: center;
-    }
-
-    /* Success View */
-    .success-animation {
-      text-align: center;
-    }
-
+    .success-animation { text-align: center; padding: 16px 0; }
     .checkmark-circle {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      display: block;
-      margin: 0 auto 24px;
-      background: var(--accent);
-      position: relative;
+      width: 80px; height: 80px; border-radius: 50%;
+      background: var(--accent); margin: 0 auto 24px;
+      display: flex; align-items: center; justify-content: center;
     }
-
     .pass-details {
-      margin: 32px 0;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+      margin: 24px 0; padding: 20px;
+      display: flex; flex-direction: column; gap: 12px;
+      list-style: none;
     }
+    .detail { display: flex; justify-content: space-between; font-size: .9rem; }
+    .detail .label { color: var(--text-muted); margin: 0; }
+    .detail .value { font-weight: 600; margin: 0; }
 
-    .detail {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.9rem;
-    }
+    .guidance-section h3 { margin-bottom: 16px; }
+    .guidance-steps { padding-left: 20px; line-height: 1.8; color: var(--text-secondary); }
 
-    .detail .label { color: var(--text-muted); }
-    .detail .value { font-weight: 600; }
-
-    /* Aside */
-    .guidance-section h3 {
-      margin-bottom: 16px;
-    }
-
-    .guidance-steps {
-      margin: 32px 0;
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-    }
-
-    .step {
-      display: flex;
-      gap: 16px;
-      align-items: center;
-    }
-
-    .step-num {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      background: var(--glass-bg);
-      border: 1px solid var(--glass-border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.8rem;
-      font-weight: 700;
-    }
-
-    .fallback-links {
-      margin-top: 40px;
-      padding-top: 24px;
-      border-top: 1px solid var(--glass-border);
-      font-size: 0.9rem;
-    }
-
-    @media (max-width: 850px) {
-      .check-in-modes { grid-template-columns: 1fr; }
-    }
-  `]
+    @media (max-width: 850px) { .check-in-modes { grid-template-columns: 1fr; } }
+  `],
 })
-export class CheckInComponent {
+export class CheckInComponent implements AfterViewInit, OnDestroy {
   private checkInService = inject(CheckInService);
-  isScanning = this.checkInService.isScanning;
-  status = this.checkInService.status;
+  @ViewChild('qrVideo') qrVideo?: ElementRef<HTMLVideoElement>;
 
-  constructor() {}
+  readonly isScanning = this.checkInService.isScanning;
+  readonly status = this.checkInService.status;
+  readonly checkedIn = computed(() => this.status()?.success === true);
 
-  startBiometric() {
-    this.checkInService.biometricCheckIn();
+  readonly mode = signal<'biometric' | 'qr' | 'manual'>('biometric');
+  manualCode = '';
+  biometricSupported = true;
+
+  ngAfterViewInit(): void {
+    this.biometricSupported = this.checkInService.isBiometricSupported();
+    if (!this.biometricSupported) this.mode.set('qr');
   }
 
-  startQR() {
-    this.checkInService.qrCheckIn('dummy_qr_data');
+  ngOnDestroy(): void {
+    this.checkInService.stopQrScan();
   }
 
-  reset() {
+  setMode(next: 'biometric' | 'qr' | 'manual'): void {
+    this.checkInService.stopQrScan();
+    this.mode.set(next);
+  }
+
+  async startBiometric(): Promise<void> {
+    await this.checkInService.biometricCheckIn();
+  }
+
+  async startQr(): Promise<void> {
+    if (!this.qrVideo) return;
+    await this.checkInService.startQrScan(this.qrVideo.nativeElement);
+  }
+
+  stopQr(): void {
+    this.checkInService.stopQrScan();
+  }
+
+  async startManual(): Promise<void> {
+    await this.checkInService.manualCheckIn(this.manualCode);
+  }
+
+  reset(): void {
+    this.manualCode = '';
     this.checkInService.reset();
   }
 }

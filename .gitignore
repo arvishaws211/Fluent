@@ -42,3 +42,34 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Secrets / environment overrides — never commit
+.env
+.env.*
+!.env.example
+src/environments/environment.local.ts
+src/environments/environment.prod.ts
+*.pem
+*.key
+serviceAccountKey*.json
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+pubsub-debug.log
+
+# Cloud Functions build artifacts
+functions/lib/
+functions/node_modules/
+
+# Test artifacts
+playwright-report/
+test-results/
+.nyc_output/
+coverage/
+
+# Editor
+*.swp
+*.swo
+
+.cursor/

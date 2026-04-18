@@ -1,28 +1,30 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Fluent Project Contributors
+
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { ReactiveFormsModule } from '@angular/forms';
+import { Router, provideRouter } from '@angular/router';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { LoginComponent } from './login.component';
 import { AuthService } from '../../../core/services/auth.service';
-import { Router, provideRouter } from '@angular/router';
-import { ReactiveFormsModule } from '@angular/forms';
-import { vi } from 'vitest';
 
 describe('LoginComponent', () => {
   let component: LoginComponent;
   let fixture: ComponentFixture<LoginComponent>;
-  let authServiceMock: any;
+  let authMock: { login: ReturnType<typeof vi.fn>; loginWithGoogle: ReturnType<typeof vi.fn> };
   let router: Router;
 
   beforeEach(async () => {
-    authServiceMock = {
+    authMock = {
       login: vi.fn(),
-      loginWithGoogle: vi.fn()
+      loginWithGoogle: vi.fn(),
     };
-
     await TestBed.configureTestingModule({
       imports: [LoginComponent, ReactiveFormsModule],
       providers: [
-        { provide: AuthService, useValue: authServiceMock },
-        provideRouter([])
-      ]
+        { provide: AuthService, useValue: authMock },
+        provideRouter([]),
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(LoginComponent);
@@ -31,61 +33,56 @@ describe('LoginComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it('creates the component', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should have invalid form when empty', () => {
-    expect(component.loginForm.valid).toBeFalsy();
+  it('starts with an invalid form', () => {
+    expect(component.loginForm.valid).toBe(false);
   });
 
-  it('should validate email format', () => {
+  it('rejects an invalid email', () => {
     const email = component.loginForm.controls.email;
-    email.setValue('invalid-email');
+    email.setValue('not-an-email');
     expect(email.errors?.['email']).toBeTruthy();
-    
+
     email.setValue('test@example.com');
     expect(email.errors).toBeNull();
   });
 
-  it('should submit form and navigate on success', fakeAsync(() => {
-    const navigateSpy = vi.spyOn(router, 'navigate');
-    authServiceMock.login.mockResolvedValue({});
-    
-    component.loginForm.setValue({
-      email: 'test@example.com',
-      password: 'password123'
-    });
-    
+  it('signs in and routes to /dashboard after the success delay', fakeAsync(() => {
+    const spy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    authMock.login.mockResolvedValue({ uid: 'u1' });
+
+    component.loginForm.setValue({ email: 'test@example.com', password: 'password123' });
     component.onSubmit();
     tick();
-    
-    expect(authServiceMock.login).toHaveBeenCalledWith('test@example.com', 'password123');
-    expect(navigateSpy).toHaveBeenCalledWith(['/dashboard']);
+    expect(authMock.login).toHaveBeenCalledWith('test@example.com', 'password123');
+    expect(component.successMessage).toMatch(/successful/i);
+
+    tick(1000);
+    expect(spy).toHaveBeenCalledWith(['/dashboard']);
   }));
 
-  it('should show error message on login failure', fakeAsync(() => {
-    authServiceMock.login.mockRejectedValue(new Error('Auth failed'));
-    
-    component.loginForm.setValue({
-      email: 'test@example.com',
-      password: 'password123'
-    });
-    
+  it('renders a translated friendly error on auth failure', fakeAsync(() => {
+    authMock.login.mockRejectedValue({ code: 'auth/invalid-login-credentials' });
+    component.loginForm.setValue({ email: 'test@example.com', password: 'password123' });
+
     component.onSubmit();
     tick();
-    
-    expect(component.errorMessage).toBe('Auth failed');
+
+    expect(component.errorMessage).toMatch(/Invalid email or password/i);
+    expect(component.isLoading).toBe(false);
   }));
 
-  it('should handle Google login', fakeAsync(() => {
-    const navigateSpy = vi.spyOn(router, 'navigate');
-    authServiceMock.loginWithGoogle.mockResolvedValue({});
-    
+  it('handles Google login and navigates immediately', fakeAsync(() => {
+    const spy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    authMock.loginWithGoogle.mockResolvedValue({ uid: 'g1' });
+
     component.onGoogleLogin();
     tick();
-    
-    expect(authServiceMock.loginWithGoogle).toHaveBeenCalled();
-    expect(navigateSpy).toHaveBeenCalledWith(['/dashboard']);
+
+    expect(authMock.loginWithGoogle).toHaveBeenCalled();
+    expect(spy).toHaveBeenCalledWith(['/dashboard']);
   }));
 });

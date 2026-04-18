@@ -1,0 +1,103 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Fluent Project Contributors
+
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  checks: write
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  install:
+    name: install + cache
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install root deps
+        run: npm ci --legacy-peer-deps
+      - name: Install Cloud Function deps
+        working-directory: functions
+        run: npm ci --legacy-peer-deps
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            functions/node_modules
+          key: ${{ runner.os }}-nm-${{ hashFiles('**/package-lock.json') }}
+
+  lint-build:
+    name: typecheck + build
+    runs-on: ubuntu-latest
+    needs: install
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --legacy-peer-deps
+      - name: Materialize placeholder env files
+        run: npm run setup:env
+      - name: Production build
+        run: npm run build -- --configuration=production
+      - name: Build Cloud Functions
+        working-directory: functions
+        run: |
+          npm ci --legacy-peer-deps
+          npm run build
+
+  unit-tests:
+    name: unit tests
+    runs-on: ubuntu-latest
+    needs: install
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --legacy-peer-deps
+      - run: npm run setup:env
+      - name: Run vitest via Angular CLI
+        run: npm test -- --watch=false
+
+  e2e-tests:
+    name: playwright e2e
+    runs-on: ubuntu-latest
+    needs: install
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --legacy-peer-deps
+      - run: npm run setup:env
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium webkit
+      - name: Run Playwright suite
+        run: npx playwright test
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7

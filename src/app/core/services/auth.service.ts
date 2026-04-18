@@ -1,70 +1,72 @@
-import { Injectable, inject, EnvironmentInjector, runInInjectionContext } from '@angular/core';
-import { Auth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, user, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail } from '@angular/fire/auth';
-import { IdentityService } from './identity.service';
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Fluent Project Contributors
+
+import { EnvironmentInjector, inject, Injectable, runInInjectionContext } from '@angular/core';
+import {
+  Auth,
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  sendPasswordResetEmail,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  signOut,
+  user,
+  type User,
+  type UserCredential,
+} from '@angular/fire/auth';
 import { Router } from '@angular/router';
 
-@Injectable({
-  providedIn: 'root'
-})
+/**
+ * Thin wrapper over Firebase Auth.
+ *
+ * `runInInjectionContext` is required because `@angular/fire` callables
+ * resolve injection context lazily; without it, `signInWithEmailAndPassword`
+ * etc. throw `inject() must be called from an injection context` when invoked
+ * from a Promise continuation.
+ *
+ * Identity caching has moved to `IdentityService`, which subscribes to
+ * `user(this.fireAuth)` directly. Auth is responsible *only* for the auth
+ * primitives + post-logout routing.
+ */
+@Injectable({ providedIn: 'root' })
 export class AuthService {
   private fireAuth = inject(Auth);
-  private identityService = inject(IdentityService);
   private router = inject(Router);
   private injector = inject(EnvironmentInjector);
 
-  public readonly currentUser$ = user(this.fireAuth);
+  readonly currentUser$ = user(this.fireAuth);
 
-  constructor() {
-    this.currentUser$.subscribe(u => {
-      if (!u) {
-        this.identityService.clearIdentity();
-      }
-    });
+  async login(email: string, pass: string): Promise<User> {
+    const cred = await runInInjectionContext(this.injector, () =>
+      signInWithEmailAndPassword(this.fireAuth, email, pass)
+    );
+    return cred.user;
   }
 
-  async login(email: string, pass: string) {
-    return runInInjectionContext(this.injector, async () => {
-      const credential = await signInWithEmailAndPassword(this.fireAuth, email, pass);
-      this.updateIdentity(credential.user);
-      return credential.user;
-    });
-  }
-
-  async loginWithGoogle() {
-    return runInInjectionContext(this.injector, async () => {
+  async loginWithGoogle(): Promise<User> {
+    const cred: UserCredential = await runInInjectionContext(this.injector, () => {
       const provider = new GoogleAuthProvider();
-      const credential = await signInWithPopup(this.fireAuth, provider);
-      this.updateIdentity(credential.user);
-      return credential.user;
+      provider.setCustomParameters({ prompt: 'select_account' });
+      return signInWithPopup(this.fireAuth, provider);
     });
+    return cred.user;
   }
 
-  async register(email: string, pass: string) {
-    return runInInjectionContext(this.injector, async () => {
-      const credential = await createUserWithEmailAndPassword(this.fireAuth, email, pass);
-      this.updateIdentity(credential.user);
-      return credential.user;
-    });
+  async register(email: string, pass: string): Promise<User> {
+    const cred = await runInInjectionContext(this.injector, () =>
+      createUserWithEmailAndPassword(this.fireAuth, email, pass)
+    );
+    return cred.user;
   }
 
-  async resetPassword(email: string) {
-    return runInInjectionContext(this.injector, async () => {
-      return await sendPasswordResetEmail(this.fireAuth, email);
-    });
+  async resetPassword(email: string): Promise<void> {
+    await runInInjectionContext(this.injector, () =>
+      sendPasswordResetEmail(this.fireAuth, email)
+    );
   }
 
-  private updateIdentity(fireUser: any) {
-    this.identityService.setIdentity({
-        id: fireUser.uid,
-        name: fireUser.displayName || fireUser.email?.split('@')[0] || 'User',
-        interests: [],
-        role: 'attendee',
-        ssiIdentifier: `did:firebase:${fireUser.uid}`
-    });
-  }
-
-  async logout() {
+  async logout(): Promise<void> {
     await signOut(this.fireAuth);
-    this.router.navigate(['/login']);
+    await this.router.navigate(['/login']);
   }
 }

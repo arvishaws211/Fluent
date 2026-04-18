@@ -1,11 +1,22 @@
-import { Component, inject, signal, computed, OnInit, AfterViewInit, ViewChild, ElementRef, effect } from '@angular/core';
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Fluent Project Contributors
+
 import { CommonModule } from '@angular/common';
-import { WayfindingService } from '../../core/services/wayfinding.service';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  ViewChild,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { importLibrary, setOptions } from '@googlemaps/js-api-loader';
 import { environment } from '../../../environments/environment';
 import { AiService } from '../../core/services/ai.service';
-
-declare var google: any;
+import { logger } from '../../core/utils/logger';
+import { WayfindingService, type Zone } from '../../core/services/wayfinding.service';
 
 @Component({
   selector: 'app-wayfinding',
@@ -15,416 +26,328 @@ declare var google: any;
     <div class="wayfinding-container animate-fade-in">
       <header class="map-header">
         <div class="header-text">
-          <h2 class="gradient-text">Event Navigation</h2>
-          <p class="text-secondary">Real-time venue wayfinding powered by Google Maps.</p>
+          <h2 class="gradient-text">Event navigation</h2>
+          <p class="text-secondary">
+            Real-time venue wayfinding powered by Google Maps Platform.
+            Sensory mode uses IoT noise telemetry to highlight quieter routes.
+          </p>
         </div>
-        
+
         <div class="map-controls">
-          <button 
-            class="btn sensory-btn" 
-            [class.active]="sensoryMode()" 
-            (click)="toggleSensory()"
-            aria-label="Toggle Sensory Mode for quiet routes"
-          >
-            <span class="icon">🧘</span>
-            Sensory Mode: {{ sensoryMode() ? 'ON' : 'OFF' }}
+          <button type="button"
+                  class="btn sensory-btn"
+                  [class.active]="sensoryMode()"
+                  [attr.aria-pressed]="sensoryMode()"
+                  (click)="toggleSensory()">
+            Sensory mode: {{ sensoryMode() ? 'On' : 'Off' }}
           </button>
         </div>
       </header>
 
       <div class="map-layout">
-        <main class="map-viewport glass-card">
-          <div #mapContainer class="interactive-map">
-             <div class="map-loading" *ngIf="isLoading()">
-                <div class="spinner"></div>
-                <p>Initializing Map...</p>
-             </div>
+        <main class="map-viewport glass-card" aria-labelledby="map-heading">
+          <h3 id="map-heading" class="visually-hidden">Interactive venue map</h3>
+
+          <div #mapContainer class="interactive-map" role="application" aria-label="Venue map">
+            <div class="map-loading" *ngIf="isLoading()" aria-live="polite">
+              <div class="spinner" aria-hidden="true"></div>
+              <p>Initializing map…</p>
+            </div>
+
+            <div class="map-error" *ngIf="loadError()" role="alert">
+              <p>Map could not be loaded. {{ loadError() }}</p>
+              <p class="text-muted small">
+                Check that <code>googleMapsApiKey</code> and <code>googleMapsMapId</code> are configured for this build.
+              </p>
+            </div>
           </div>
 
-          <!-- Floated Overlays -->
-          <div class="overlay-top-right">
-            <div class="legend glass animate-fade-in" *ngIf="!isLoading()">
-              <div class="legend-item"><span class="dot quiet"></span> Quiet Zone</div>
-              <div class="legend-item"><span class="dot busy"></span> High Density</div>
-            </div>
+          <div class="overlay-top-right" *ngIf="!isLoading() && !loadError()">
+            <ul class="legend glass animate-fade-in" role="list">
+              <li class="legend-item"><span class="dot quiet" aria-hidden="true"></span> Quiet zone</li>
+              <li class="legend-item"><span class="dot busy" aria-hidden="true"></span> High density</li>
+            </ul>
           </div>
         </main>
 
-        <aside class="route-panel glass-card">
-          <h3>Target Destination</h3>
+        <aside class="route-panel glass-card" aria-labelledby="dest-heading">
+          <h3 id="dest-heading">Target destination</h3>
+
+          <label for="route-search" class="visually-hidden">Search rooms or booths</label>
           <div class="search-box glass">
-            <input #searchInput type="text" placeholder="Search rooms, booths, or exits..." />
+            <input id="route-search"
+                   type="text"
+                   placeholder="Search rooms, booths, or exits…"
+                   [value]="searchQuery()"
+                   (input)="searchQuery.set($any($event.target).value)" />
           </div>
 
-          <div class="suggested-routes">
-            <div 
-              *ngFor="let zone of zones()" 
-              class="route-option glass" 
-              [class.selected]="selectedRoom() === zone.id"
-              (click)="focusZone(zone)"
-            >
-              <div class="route-meta">
-                <span class="title">{{ zone.id | titlecase }}</span>
-                <span class="est">{{ zone.isQuietZone ? 'Quiet' : 'Standard' }} Area</span>
-              </div>
-              <span class="tag" *ngIf="sensoryMode() && zone.isQuietZone">Recommended</span>
-            </div>
-          </div>
+          <ul class="suggested-routes" role="list">
+            <li *ngFor="let zone of filteredZones()">
+              <button type="button"
+                      class="route-option glass"
+                      [class.selected]="selectedRoom() === zone.id"
+                      [attr.aria-pressed]="selectedRoom() === zone.id"
+                      (click)="focusZone(zone)">
+                <span class="route-meta">
+                  <span class="title">{{ zone.id | titlecase }}</span>
+                  <span class="est">{{ zone.isQuietZone ? 'Quiet' : 'Standard' }} area</span>
+                </span>
+                <span class="tag" *ngIf="sensoryMode() && zone.isQuietZone">Recommended</span>
+              </button>
+            </li>
+            <li *ngIf="!filteredZones().length" class="text-muted">No zones match that search.</li>
+          </ul>
 
-          <div class="sensory-info" *ngIf="sensoryMode()">
-            <p class="text-secondary small">
-              <span class="icon">ℹ️</span> 
-              Sensitive triggers are hidden. Showing quietest routes and low-density areas.
-            </p>
-          </div>
+          <p class="sensory-info" *ngIf="sensoryMode()">
+            Sensitive triggers are hidden. Showing quietest routes and low-density areas.
+          </p>
 
-          <!-- AI Sensory Concierge -->
-          <div class="ai-advice glass mt-4" *ngIf="selectedZoneAdvice()">
-            <div class="ai-header">
-                <span class="ai-icon">✨</span>
-                <span class="ai-title">AI Assistant</span>
-            </div>
+          <section class="ai-advice glass" *ngIf="selectedZoneAdvice()" aria-live="polite">
+            <header class="ai-header">
+              <span class="ai-title">AI sensory concierge</span>
+            </header>
             <p class="advice-text">{{ selectedZoneAdvice() }}</p>
-          </div>
+          </section>
         </aside>
       </div>
     </div>
   `,
   styles: [`
-    .wayfinding-container {
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
+    .wayfinding-container { display: flex; flex-direction: column; gap: 24px; }
+    .visually-hidden {
+      position: absolute; width: 1px; height: 1px;
+      padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0);
+      white-space: nowrap; border: 0;
     }
 
-    .map-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+    .map-header { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
 
     .sensory-btn {
       background: var(--glass-bg);
       border: 1px solid var(--glass-border);
       color: var(--text-primary);
       padding: 12px 24px;
-      transition: all 0.3s;
     }
-
-    .sensory-btn .icon { font-size: 1.2rem; }
-
     .sensory-btn.active {
       border-color: var(--accent);
-      background: rgba(16, 185, 129, 0.1);
-      box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+      background: rgba(16,185,129,.1);
+      box-shadow: 0 0 20px rgba(16,185,129,.2);
     }
+    .sensory-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
-    .map-layout {
-      display: grid;
-      grid-template-columns: 1fr 340px;
-      gap: 24px;
-    }
+    .map-layout { display: grid; grid-template-columns: 1fr 340px; gap: 24px; }
+    .map-viewport { height: 600px; padding: 0; overflow: hidden; display: flex; position: relative; }
+    .interactive-map { flex: 1; position: relative; background: #0a0a0c; }
 
-    .map-viewport {
-      height: 600px;
-      padding: 0;
-      overflow: hidden;
-      display: flex;
+    .map-loading, .map-error {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 16px; background: var(--bg-main); z-index: 10; padding: 24px; text-align: center;
     }
-
-    .interactive-map {
-      flex: 1;
-      position: relative;
-      background: #0a0a0c;
-    }
-
-    .map-loading {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-      background: var(--bg-main);
-      z-index: 10;
-    }
+    .map-error code { color: var(--primary); }
+    .small { font-size: .8rem; }
 
     .spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid var(--glass-border);
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
+      width: 40px; height: 40px;
+      border: 3px solid var(--glass-border); border-top-color: var(--primary);
+      border-radius: 50%; animation: spin 1s linear infinite;
     }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .zone-label {
-      fill: var(--text-muted);
-      font-size: 12px;
-      font-weight: 500;
-      pointer-events: none;
-    }
-
-    .user-pin text {
-      fill: var(--text-primary);
-      font-size: 14px;
-      font-weight: 600;
-    }
-
-    .pulse-pin {
-      animation: pulse-pin 2s infinite;
-    }
-
-    @keyframes pulse-pin {
-      0% { r: 6; opacity: 1; }
-      50% { r: 12; opacity: 0.5; }
-      100% { r: 6; opacity: 1; }
-    }
-
-    .route-path {
-      stroke-dasharray: 10;
-      animation: dash 20s linear infinite;
-    }
-
-    @keyframes dash {
-      to { stroke-dashoffset: -1000; }
-    }
-
-    .overlay-top-right {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-    }
-
-    .legend {
-      padding: 12px;
-      font-size: 0.85rem;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
+    .overlay-top-right { position: absolute; top: 20px; right: 20px; z-index: 5; }
+    .legend { padding: 12px; font-size: .85rem; display: flex; flex-direction: column; gap: 8px; list-style: none; margin: 0; }
     .legend-item { display: flex; align-items: center; gap: 8px; }
     .dot { width: 8px; height: 8px; border-radius: 50%; }
     .dot.quiet { background: var(--accent); }
     .dot.busy { background: var(--danger); }
 
-    .route-panel {
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
+    .route-panel { padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+    .search-box input { width: 100%; background: transparent; border: none; padding: 12px; color: var(--text-primary); outline: none; }
 
-    .search-box input {
-      width: 100%;
-      background: transparent;
-      border: none;
-      padding: 12px;
-      color: var(--text-primary);
-      outline: none;
-    }
-
-    .suggested-routes {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
+    .suggested-routes { display: flex; flex-direction: column; gap: 12px; padding: 0; margin: 0; list-style: none; }
     .route-option {
-      padding: 16px;
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border: 1px solid transparent;
-      transition: all 0.2s;
+      width: 100%; padding: 16px; cursor: pointer;
+      display: flex; justify-content: space-between; align-items: center;
+      border: 1px solid transparent; transition: all .2s;
+      background: var(--glass-bg); color: inherit;
+      text-align: left;
     }
-
     .route-option:hover { border-color: var(--primary); }
-    .route-option.selected { border-color: var(--accent); background: rgba(16, 185, 129, 0.05); }
-
+    .route-option:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+    .route-option.selected { border-color: var(--accent); background: rgba(16,185,129,.05); }
     .route-meta { display: flex; flex-direction: column; }
-    .route-meta .title { font-weight: 500; font-size: 0.95rem; }
-    .route-meta .est { font-size: 0.8rem; color: var(--text-muted); }
+    .route-meta .title { font-weight: 500; font-size: .95rem; }
+    .route-meta .est { font-size: .8rem; color: var(--text-muted); }
 
     .tag {
-      font-size: 0.7rem;
-      background: var(--accent);
-      color: white;
-      padding: 2px 8px;
-      border-radius: var(--radius-sm);
-      font-weight: 700;
+      font-size: .7rem; background: var(--accent); color: white;
+      padding: 2px 8px; border-radius: var(--radius-sm); font-weight: 700;
     }
 
     .sensory-info {
-      margin-top: auto;
-      padding-top: 20px;
+      margin-top: auto; padding-top: 20px;
       border-top: 1px solid var(--glass-border);
-    }
-
-    .small { font-size: 0.8rem; }
-
-    @media (max-width: 1000px) {
-      .map-layout { grid-template-columns: 1fr; }
+      font-size: .8rem; color: var(--text-secondary);
     }
 
     .ai-advice {
-      padding: 16px;
-      margin-top: 16px;
+      padding: 16px; margin-top: 16px;
       border: 1px dashed var(--primary);
-      background: rgba(99, 102, 241, 0.05);
+      background: rgba(99,102,241,.05);
       border-radius: var(--radius-sm);
     }
-    .ai-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
+    .ai-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .ai-title { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--primary); }
+    .advice-text { font-size: .85rem; line-height: 1.4; color: var(--text-secondary); font-style: italic; }
+
+    @media (max-width: 1000px) {
+      .map-layout { grid-template-columns: 1fr; }
+      .map-viewport { height: 420px; }
     }
-    .ai-icon { font-size: 1.2rem; }
-    .ai-title {
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--primary);
-    }
-    .advice-text {
-      font-size: 0.85rem;
-      line-height: 1.4;
-      color: var(--text-secondary);
-      font-style: italic;
-    }
-    .mt-4 { margin-top: 1rem; }
-  `]
+  `],
 })
 export class WayfindingComponent implements AfterViewInit {
-  @ViewChild('mapContainer') mapContainer!: ElementRef;
-  
+  @ViewChild('mapContainer') mapContainer!: ElementRef<HTMLDivElement>;
+
   private wayfindingService = inject(WayfindingService);
   private aiService = inject(AiService);
-  
-  sensoryMode = this.wayfindingService.sensoryModeEnabled;
-  zones = this.wayfindingService.zones;
-  isLoading = signal(true);
-  selectedRoom = signal<string | null>(null);
-  selectedZoneAdvice = signal<string | null>(null);
 
-  private map?: any;
-  private markers: any[] = [];
-  private heatmap?: any;
+  readonly sensoryMode = this.wayfindingService.sensoryModeEnabled;
+  readonly zones = this.wayfindingService.zones;
+  readonly isLoading = signal(true);
+  readonly loadError = signal<string | null>(null);
+  readonly selectedRoom = signal<string | null>(null);
+  readonly selectedZoneAdvice = signal<string | null>(null);
+  readonly searchQuery = signal('');
+
+  readonly filteredZones = computed(() => {
+    const q = this.searchQuery().trim().toLowerCase();
+    if (!q) return this.zones();
+    return this.zones().filter((z) => z.id.toLowerCase().includes(q));
+  });
+
+  private map?: google.maps.Map;
+  private markers: google.maps.marker.AdvancedMarkerElement[] = [];
 
   constructor() {
-    // Re-draw map elements when sensory mode changes
-    effect(() => {
-      this.updateMapForSensoryMode(this.sensoryMode());
-    });
+    effect(() => this.updateMapForSensoryMode(this.sensoryMode()));
   }
 
-  async ngAfterViewInit() {
+  async ngAfterViewInit(): Promise<void> {
     await this.initMap();
   }
 
-  private async initMap() {
-    setOptions({
-      key: environment.googleMapsApiKey,
-    });
+  private async initMap(): Promise<void> {
+    if (!environment.googleMapsApiKey || environment.googleMapsApiKey.startsWith('__')) {
+      this.isLoading.set(false);
+      this.loadError.set('Maps API key is not configured.');
+      logger.warn('wayfinding.initMap', 'missing Google Maps API key');
+      return;
+    }
+
+    setOptions({ key: environment.googleMapsApiKey });
 
     try {
-      const { Map } = await importLibrary('maps') as any;
-      const { AdvancedMarkerElement, PinElement } = await importLibrary('marker') as any;
-      
+      const { Map } = (await importLibrary('maps')) as google.maps.MapsLibrary;
+      const { AdvancedMarkerElement, PinElement } =
+        (await importLibrary('marker')) as google.maps.MarkerLibrary;
+
       this.map = new Map(this.mapContainer.nativeElement, {
         center: { lat: 37.7749, lng: -122.4194 },
         zoom: 16,
         styles: this.getMapStyles(),
         disableDefaultUI: true,
         backgroundColor: '#0a0a0c',
-        mapId: 'DEMO_MAP_ID' // Required for Advanced Markers
+        mapId: environment.googleMapsMapId || 'DEMO_MAP_ID',
       });
 
       this.addMarkers(AdvancedMarkerElement, PinElement);
       this.isLoading.set(false);
     } catch (err) {
-      console.error('Google Maps Load Error:', err);
+      logger.error('wayfinding.initMap', err);
       this.isLoading.set(false);
+      this.loadError.set('Network or configuration error.');
     }
   }
 
-  private addMarkers(AdvancedMarkerElement: any, PinElement: any) {
-    this.zones().forEach(zone => {
+  private addMarkers(
+    AdvancedMarkerElement: typeof google.maps.marker.AdvancedMarkerElement,
+    PinElement: typeof google.maps.marker.PinElement,
+  ): void {
+    if (!this.map) return;
+    this.zones().forEach((zone) => {
       const pin = new PinElement({
         background: zone.isQuietZone ? '#10b981' : '#ef4444',
         borderColor: '#ffffff',
         glyphColor: '#ffffff',
-        scale: 1.2
+        scale: 1.2,
       });
 
       const marker = new AdvancedMarkerElement({
         map: this.map,
         position: zone.center,
         title: zone.id,
-        content: pin
+        content: pin.element,
       });
-      
+
       marker.addListener('gmp-click', () => this.focusZone(zone));
       this.markers.push(marker);
     });
   }
 
-  async focusZone(zone: any) {
+  async focusZone(zone: Zone): Promise<void> {
     this.selectedRoom.set(zone.id);
-    this.selectedZoneAdvice.set('AI agent is synthesizing sensory data...');
-    
-    const map = this.map;
-    if (map) {
-      map.panTo(zone.center);
-      map.setZoom(19);
+    this.selectedZoneAdvice.set('AI sensory concierge is synthesizing advice…');
+
+    if (this.map) {
+      this.map.panTo(zone.center);
+      this.map.setZoom(19);
     }
 
-    const advice = await this.aiService.getSensoryAdvice(zone.id, zone.noiseLevel);
-    this.selectedZoneAdvice.set(advice);
+    try {
+      const advice = await this.aiService.getSensoryAdvice(zone.id, zone.noiseLevel);
+      this.selectedZoneAdvice.set(advice);
+    } catch (err) {
+      logger.error('wayfinding.focusZone', err);
+      this.selectedZoneAdvice.set(
+        zone.isQuietZone
+          ? `${zone.id} is currently a calm area — a good fit for a focused conversation.`
+          : `${zone.id} is busy right now. Consider visiting a quieter zone if you need a break.`,
+      );
+    }
   }
 
-  toggleSensory() {
+  toggleSensory(): void {
     this.wayfindingService.toggleSensoryMode();
   }
 
-  private updateMapForSensoryMode(enabled: boolean) {
+  private updateMapForSensoryMode(enabled: boolean): void {
     const map = this.map;
     if (!map) return;
 
     this.markers.forEach((marker, index) => {
       const zone = this.zones()[index];
-      if (enabled && !zone.isQuietZone) {
-        marker.setMap(null);
-      } else {
-        marker.setMap(map);
-      }
+      if (!zone) return;
+      marker.map = enabled && !zone.isQuietZone ? null : map;
     });
 
     map.setOptions({ styles: this.getMapStyles() });
   }
 
-  private getMapStyles(): any[] {
-    const baseStyles: any[] = [
+  private getMapStyles(): google.maps.MapTypeStyle[] {
+    const baseStyles: google.maps.MapTypeStyle[] = [
       { elementType: 'geometry', stylers: [{ color: '#121214' }] },
       { elementType: 'labels.text.stroke', stylers: [{ color: '#121214' }] },
       { elementType: 'labels.text.fill', stylers: [{ color: '#94a3b8' }] },
       { featureType: 'administrative', stylers: [{ visibility: 'off' }] },
       { featureType: 'poi', stylers: [{ visibility: 'on' }, { color: '#27272a' }] },
       { featureType: 'road', stylers: [{ visibility: 'simplified' }, { color: '#1e1e21' }] },
-      { featureType: 'water', stylers: [{ color: '#0a0a0c' }] }
+      { featureType: 'water', stylers: [{ color: '#0a0a0c' }] },
     ];
 
     if (this.sensoryMode()) {
-       baseStyles.push({ featureType: 'poi.business', stylers: [{ visibility: 'off' }] });
+      baseStyles.push({ featureType: 'poi.business', stylers: [{ visibility: 'off' }] });
     }
 
     return baseStyles;

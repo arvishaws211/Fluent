@@ -1,263 +1,210 @@
-import { Component, inject, signal } from '@angular/core';
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Fluent Project Contributors
+
 import { CommonModule } from '@angular/common';
-import { MatchmakingService, MatchResult } from '../../core/services/matchmaking.service';
+import { Component, computed, effect, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { IdentityService } from '../../core/services/identity.service';
+import { MatchmakingService } from '../../core/services/matchmaking.service';
+
+const SUGGESTED_INTERESTS = [
+  'Agentic AI',
+  'Sustainability',
+  'Web3',
+  'Edge Computing',
+  'Sponsorship',
+  'Hiring',
+  'Healthcare AI',
+  'Fintech',
+  'Robotics',
+  'Climate Tech',
+];
 
 @Component({
   selector: 'app-matchmaking',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   template: `
     <div class="matchmaking-container animate-fade-in">
       <header class="page-header">
-        <h2 class="gradient-text">AI Matchmaking</h2>
-        <p class="text-secondary">Synthesizing attendee profiles and sponsor missions to find your perfect professional matches.</p>
+        <h2 class="gradient-text">AI matchmaking</h2>
+        <p class="text-secondary">
+          Vertex AI synthesizes attendee profiles and sponsor missions to surface high-value introductions —
+          all without exposing your identity to the model.
+        </p>
       </header>
 
       <div class="matchmaking-layout">
-        <main class="results-section">
-          <div class="status-bar glass" *ngIf="isProcessing()">
-            <div class="loader-line"></div>
-            <span>Analyzing 500+ attendee profiles via Vertex AI...</span>
+        <main class="results-section" aria-labelledby="results-heading">
+          <h3 id="results-heading" class="visually-hidden">Match results</h3>
+
+          <div class="status-bar glass" *ngIf="isProcessing()" aria-live="polite">
+            <div class="loader-line" aria-hidden="true"></div>
+            <span>Synthesizing matches via Vertex AI…</span>
           </div>
 
-          <div class="results-grid" *ngIf="!isProcessing()">
-            <div class="match-card glass-card" *ngFor="let match of matches()">
-              <div class="match-header">
-                <div class="match-badge" [class]="match.type">{{ match.type | titlecase }}</div>
-                <div class="match-score">{{ (match.relevanceScore * 100).toFixed(0) }}% Match</div>
-              </div>
-              
+          <div class="error-bar glass" *ngIf="error()" role="alert">
+            <strong>Heads up.</strong> {{ error() }}
+          </div>
+
+          <div class="results-grid" *ngIf="!isProcessing() && matches().length">
+            <article class="match-card glass-card" *ngFor="let match of matches()" [attr.aria-label]="'Match: ' + match.partnerName">
+              <header class="match-header">
+                <span class="match-badge" [class]="match.type">{{ match.type | titlecase }}</span>
+                <span class="match-score" [attr.aria-label]="'Relevance ' + (match.relevanceScore * 100).toFixed(0) + ' percent'">
+                  {{ (match.relevanceScore * 100).toFixed(0) }}% match
+                </span>
+              </header>
               <div class="match-content">
-                <h3>{{ match.partnerName }}</h3>
+                <h4>{{ match.partnerName }}</h4>
                 <p class="reasoning">{{ match.reasoning }}</p>
-                
-                <div class="tag-cloud">
-                  <span class="tag glass">AI Infrastructure</span>
-                  <span class="tag glass">Scalability</span>
-                </div>
               </div>
-
               <footer class="match-actions">
-                <button class="btn btn-primary w-full">Schedule Meeting</button>
-                <button class="btn btn-outline w-full">View Profile</button>
+                <button type="button" class="btn btn-primary w-full">Schedule meeting</button>
+                <button type="button" class="btn btn-outline w-full">View profile</button>
               </footer>
-            </div>
+            </article>
           </div>
+
+          <p class="empty-state" *ngIf="!isProcessing() && !matches().length && !error()">
+            Add a few interests on the right, then tap <em>Update AI agent</em> to generate fresh matches.
+          </p>
         </main>
 
-        <aside class="intent-section glass-card">
-          <h3>Your AI Agent Intent</h3>
+        <aside class="intent-section glass-card" aria-labelledby="intent-heading">
+          <h3 id="intent-heading">Your AI agent intent</h3>
           <p class="text-secondary small">Refine what the AI should look for when matching you.</p>
-          
-          <div class="intent-form">
+
+          <form class="intent-form" (ngSubmit)="updateAgent()">
             <div class="form-group">
-              <label>Match Goal</label>
-              <select class="glass">
-                <option>Technical Collaboration</option>
-                <option>Investment/Funding</option>
-                <option>Hiring/Talent</option>
-                <option>Sponsorship Info</option>
+              <label for="match-goal">Match goal</label>
+              <select id="match-goal" class="glass-input" [(ngModel)]="goal" name="goal">
+                <option value="collaboration">Technical collaboration</option>
+                <option value="funding">Investment / Funding</option>
+                <option value="hiring">Hiring / Talent</option>
+                <option value="sponsor">Sponsorship info</option>
               </select>
             </div>
 
-            <div class="form-group">
-              <label>Priority Interests</label>
-              <div class="interest-tags">
-                <span class="tag active">Agentic AI</span>
-                <span class="tag active">Sustainability</span>
-                <span class="tag">Web3</span>
-                <span class="tag">Edge Computing</span>
+            <fieldset class="form-group">
+              <legend>Priority interests</legend>
+              <div class="interest-tags" role="list">
+                <button type="button" role="listitem"
+                        *ngFor="let tag of SUGGESTED"
+                        class="tag"
+                        [class.active]="selected().includes(tag)"
+                        [attr.aria-pressed]="selected().includes(tag)"
+                        (click)="toggleInterest(tag)">
+                  {{ tag }}
+                </button>
               </div>
-            </div>
+            </fieldset>
 
-            <button class="btn btn-primary" (click)="reMatch()">Update AI Agent</button>
-          </div>
+            <button type="submit" class="btn btn-primary" [disabled]="isProcessing()">
+              {{ isProcessing() ? 'Updating…' : 'Update AI agent' }}
+            </button>
+          </form>
 
-          <div class="privacy-note glass">
-             <span class="icon">🔒</span>
-             <span>Your PII is protected by SSI. Agents only see synthesized interest vectors.</span>
-          </div>
+          <p class="privacy-note glass" role="note">
+            <span aria-hidden="true">SSI</span>
+            <span>Your PII stays on-device. The AI only sees a synthesized interest vector.</span>
+          </p>
         </aside>
       </div>
     </div>
   `,
   styles: [`
-    .matchmaking-container {
-      max-width: 1200px;
-      margin: 0 auto;
+    .matchmaking-container { max-width: 1200px; margin: 0 auto; }
+    .page-header { margin-bottom: 32px; }
+    .matchmaking-layout { display: grid; grid-template-columns: 1fr 320px; gap: 32px; }
+
+    .visually-hidden {
+      position: absolute; width: 1px; height: 1px;
+      padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0);
+      white-space: nowrap; border: 0;
     }
 
-    .page-header { margin-bottom: 40px; }
+    .status-bar, .error-bar { padding: 16px 24px; margin-bottom: 24px; display: flex; gap: 16px; align-items: center; }
+    .error-bar { color: #ff6b6b; }
 
-    .matchmaking-layout {
-      display: grid;
-      grid-template-columns: 1fr 320px;
-      gap: 32px;
-    }
-
-    .status-bar {
-      padding: 16px 24px;
-      margin-bottom: 24px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      font-size: 0.9rem;
-      color: var(--primary);
-    }
-
-    .loader-line {
-      flex: 1;
-      height: 2px;
-      background: var(--glass-border);
-      position: relative;
-      overflow: hidden;
-    }
-
+    .loader-line { flex: 1; height: 2px; background: var(--glass-border); position: relative; overflow: hidden; }
     .loader-line::after {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      height: 100%;
-      width: 30%;
-      background: var(--primary);
+      content: ''; position: absolute; left: -30%; top: 0;
+      height: 100%; width: 30%; background: var(--primary);
       animation: slide 1.5s infinite ease-in-out;
     }
+    @keyframes slide { from { left: -30%; } to { left: 100%; } }
 
-    @keyframes slide {
-      0% { left: -30%; }
-      100% { left: 100%; }
-    }
-
-    .results-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-      gap: 24px;
-    }
-
-    .match-card {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      padding: 24px;
-      transition: all 0.3s;
-    }
-
-    .match-card:hover {
-      border-color: var(--primary);
-      box-shadow: 0 8px 32px rgba(99, 102, 241, 0.1);
-    }
-
-    .match-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .match-badge {
-      font-size: 0.7rem;
-      font-weight: 700;
-      padding: 4px 10px;
-      border-radius: var(--radius-sm);
-      text-transform: uppercase;
-    }
-
-    .match-badge.sponsor { background: rgba(99, 102, 241, 0.1); color: var(--primary); }
-    .match-badge.attendee { background: rgba(16, 185, 129, 0.1); color: var(--accent); }
-    .match-badge.session { background: rgba(236, 72, 153, 0.1); color: var(--secondary); }
-
-    .match-score {
-      font-weight: 600;
-      font-size: 0.85rem;
-      color: var(--primary);
-    }
-
-    .reasoning {
-      font-size: 0.95rem;
-      color: var(--text-secondary);
-      line-height: 1.5;
-      margin: 12px 0;
-    }
-
-    .tag-cloud {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .tag {
-      font-size: 0.75rem;
-      padding: 4px 10px;
-      color: var(--text-muted);
-    }
-
-    .tag.active {
-      background: var(--primary);
-      color: white;
-      border: none;
-    }
-
-    .match-actions {
-      display: flex;
-      gap: 12px;
-      margin-top: auto;
-    }
-
+    .results-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
+    .match-card { display: flex; flex-direction: column; gap: 16px; padding: 24px; }
+    .match-header { display: flex; justify-content: space-between; align-items: center; }
+    .match-badge { font-size: .7rem; font-weight: 700; padding: 4px 10px; border-radius: var(--radius-sm); text-transform: uppercase; }
+    .match-badge.sponsor  { background: rgba(99,102,241,.1); color: var(--primary); }
+    .match-badge.attendee { background: rgba(16,185,129,.1); color: var(--accent); }
+    .match-badge.session  { background: rgba(236,72,153,.1); color: var(--secondary); }
+    .match-score { font-weight: 600; font-size: .85rem; color: var(--primary); }
+    .reasoning { font-size: .95rem; color: var(--text-secondary); line-height: 1.5; }
+    .match-actions { display: flex; gap: 12px; margin-top: auto; }
     .w-full { width: 100%; }
 
-    .intent-form {
-      margin-top: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
+    .empty-state { color: var(--text-muted); padding: 24px; text-align: center; }
 
-    .form-group label {
-      display: block;
-      font-size: 0.85rem;
-      font-weight: 500;
-      margin-bottom: 8px;
-      color: var(--text-secondary);
-    }
-
-    .form-group select {
-      width: 100%;
-      padding: 10px;
-      background: var(--bg-surface);
+    .intent-form { margin-top: 16px; display: flex; flex-direction: column; gap: 20px; }
+    .form-group label, .form-group legend { display: block; font-size: .85rem; font-weight: 500; margin-bottom: 8px; color: var(--text-secondary); }
+    .glass-input {
+      width: 100%; padding: 10px 12px;
+      background: rgba(255,255,255,.05);
       border: 1px solid var(--glass-border);
-      color: var(--text-primary);
-      border-radius: var(--radius-sm);
+      color: var(--text-primary); border-radius: var(--radius-sm);
     }
-
-    .interest-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
+    .interest-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tag {
+      font-size: .75rem; padding: 6px 12px;
+      background: var(--glass-bg); color: var(--text-muted);
+      border: 1px solid var(--glass-border); border-radius: var(--radius-sm);
+      cursor: pointer;
     }
+    .tag.active { background: var(--primary); color: white; border-color: var(--primary); }
+    .tag:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
     .privacy-note {
-      margin-top: 32px;
-      padding: 16px;
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      display: flex;
-      gap: 12px;
-      align-items: center;
+      margin-top: 24px; padding: 16px; font-size: .8rem;
+      color: var(--text-muted); display: flex; gap: 12px; align-items: center;
     }
 
     @media (max-width: 900px) {
       .matchmaking-layout { grid-template-columns: 1fr; }
     }
-  `]
+  `],
 })
 export class MatchmakingComponent {
   private matchmakingService = inject(MatchmakingService);
-  matches = this.matchmakingService.matches;
-  isProcessing = this.matchmakingService.isProcessing;
+  private identityService = inject(IdentityService);
 
-  constructor() {}
+  readonly matches = this.matchmakingService.matches;
+  readonly isProcessing = this.matchmakingService.isProcessing;
+  readonly error = this.matchmakingService.error;
+  readonly SUGGESTED = SUGGESTED_INTERESTS;
 
-  reMatch() {
-    this.matchmakingService.generateMatches();
+  readonly selected = signal<string[]>([]);
+  goal = 'collaboration';
+
+  constructor() {
+    effect(() => {
+      const user = this.identityService.currentAttendee();
+      if (user?.interests) this.selected.set([...user.interests]);
+    });
+  }
+
+  toggleInterest(tag: string): void {
+    const current = this.selected();
+    this.selected.set(
+      current.includes(tag) ? current.filter((t) => t !== tag) : [...current, tag],
+    );
+  }
+
+  async updateAgent(): Promise<void> {
+    await this.identityService.updateInterests(this.selected());
+    await this.matchmakingService.generateMatches();
   }
 }

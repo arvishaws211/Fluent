@@ -1,0 +1,32 @@
+{
+  "name": "Fluent — Event Experience Platform",
+  "short_name": "Fluent",
+  "description": "End-to-end event PWA with AI matchmaking, AR wayfinding, sensory mode, and SSI check-in.",
+  "start_url": "/",
+  "scope": "/",
+  "id": "/?source=pwa",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0b0b1a",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["productivity", "events", "business"],
+  "shortcuts": [
+    { "name": "Check-in", "short_name": "Check-in", "url": "/check-in", "description": "Express check-in" },
+    { "name": "Wayfinding", "short_name": "Map", "url": "/wayfinding", "description": "Find your way" },
+    { "name": "Matchmaking", "short_name": "Matches", "url": "/matchmaking", "description": "AI matches" }
+  ]
+}
