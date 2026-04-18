@@ -6,7 +6,8 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "deploy": "gcloud run deploy fluent-app --source . --project fluent-493613 --allow-unauthenticated --region us-central1 --quiet"
   },
   "private": true,
   "packageManager": "npm@11.6.2",
