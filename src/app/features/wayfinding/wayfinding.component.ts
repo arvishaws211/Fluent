@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Fluent Project Contributors
 
-import { CommonModule } from '@angular/common';
+import { TitleCasePipe } from '@angular/common';
 import {
   AfterViewInit,
   Component,
@@ -21,7 +21,7 @@ import { WayfindingService, type Zone } from '../../core/services/wayfinding.ser
 @Component({
   selector: 'app-wayfinding',
   standalone: true,
-  imports: [CommonModule],
+  imports: [TitleCasePipe],
   template: `
     <div class="wayfinding-container animate-fade-in">
       <header class="map-header">

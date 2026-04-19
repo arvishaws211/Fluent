@@ -11,14 +11,14 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { TitleCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CheckInService } from '../../core/services/check-in.service';
 
 @Component({
   selector: 'app-check-in',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule, TitleCasePipe],
   template: `
     <section class="check-in-container animate-fade-in" aria-labelledby="check-in-heading">
       <header class="page-header">

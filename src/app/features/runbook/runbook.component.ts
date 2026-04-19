@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Fluent Project Contributors
 
-import { CommonModule } from '@angular/common';
+import { DatePipe, TitleCasePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
@@ -16,7 +16,7 @@ const PRIORITIES: RunbookPriority[] = ['low', 'medium', 'high'];
 @Component({
   selector: 'app-runbook',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule, DatePipe, TitleCasePipe],
   template: `
     <div class="runbook-container animate-fade-in">
       <header class="page-header">
