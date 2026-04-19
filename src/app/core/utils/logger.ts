@@ -12,9 +12,7 @@ import { isDevMode } from '@angular/core';
 
 type Level = 'debug' | 'info' | 'warn' | 'error';
 
-interface LogContext {
-  [k: string]: unknown;
-}
+type LogContext = Record<string, unknown>;
 
 function emit(level: Level, message: string, context?: LogContext | unknown): void {
   if (isDevMode()) {
@@ -29,7 +27,7 @@ function emit(level: Level, message: string, context?: LogContext | unknown): vo
     time: new Date().toISOString(),
     ...(context && typeof context === 'object' ? { context } : { detail: context }),
   };
-  // eslint-disable-next-line no-console
+
   console.log(JSON.stringify(payload));
 }
 

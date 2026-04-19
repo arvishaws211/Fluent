@@ -25,7 +25,9 @@ test.describe('check-in to wayfinding', () => {
     await page.addInitScript(() => {
       Object.defineProperty(window, 'PublicKeyCredential', {
         configurable: true,
-        get() { return undefined; },
+        get() {
+          return undefined;
+        },
       });
     });
 
@@ -38,7 +40,9 @@ test.describe('check-in to wayfinding', () => {
     await page.goto('/');
     await page.context().setOffline(true);
 
-    const response = await page.goto('/wayfinding', { waitUntil: 'domcontentloaded' }).catch(() => null);
+    const response = await page
+      .goto('/wayfinding', { waitUntil: 'domcontentloaded' })
+      .catch(() => null);
     if (response) {
       // Either we reached the cached shell or the SW served the offline page.
       const body = await page.content();

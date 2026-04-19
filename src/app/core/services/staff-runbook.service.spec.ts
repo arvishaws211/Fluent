@@ -52,10 +52,7 @@ describe('StaffRunbookService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [
-        StaffRunbookService,
-        { provide: Firestore, useValue: {} },
-      ],
+      providers: [StaffRunbookService, { provide: Firestore, useValue: {} }],
     });
     service = TestBed.inject(StaffRunbookService);
   });

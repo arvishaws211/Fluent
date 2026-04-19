@@ -1,16 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Fluent Project Contributors
 
-import {
-  AfterViewInit,
-  Component,
-  ElementRef,
-  OnDestroy,
-  ViewChild,
-  computed,
-  inject,
-  signal,
-} from '@angular/core';
+import type { AfterViewInit, ElementRef, OnDestroy } from '@angular/core';
+import { Component, ViewChild, computed, inject, signal } from '@angular/core';
 import { TitleCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CheckInService } from '../../core/services/check-in.service';

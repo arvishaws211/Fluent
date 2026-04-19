@@ -121,9 +121,7 @@ function escape(value: string): string {
 
 export function renderSetupScreen(result: EnvValidationResult): void {
   const root = document.querySelector('app-root') ?? document.body;
-  const problems = result.problems
-    .map((p) => `<li>${escape(p)}</li>`)
-    .join('');
+  const problems = result.problems.map((p) => `<li>${escape(p)}</li>`).join('');
 
   const status = [
     `<span class="badge">Firebase ${result.hasAuth ? 'OK' : 'not configured'}</span>`,

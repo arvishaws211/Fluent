@@ -29,10 +29,7 @@ describe('AiService', () => {
     callBatchMatchmaking.mockReset();
 
     TestBed.configureTestingModule({
-      providers: [
-        AiService,
-        { provide: Functions, useValue: {} },
-      ],
+      providers: [AiService, { provide: Functions, useValue: {} }],
     });
     service = TestBed.inject(AiService);
   });
@@ -58,9 +55,7 @@ describe('AiService', () => {
   it('passes through the batch result', async () => {
     callBatchMatchmaking.mockResolvedValue({
       data: {
-        matches: [
-          { partnerName: 'X', type: 'sponsor', relevanceScore: 0.9, reasoning: 'r' },
-        ],
+        matches: [{ partnerName: 'X', type: 'sponsor', relevanceScore: 0.9, reasoning: 'r' }],
       },
     });
     const result = await service.generateBatchMatches({

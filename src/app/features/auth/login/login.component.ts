@@ -5,10 +5,7 @@ import { Component, inject } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-import {
-  getFirebaseErrorMessage,
-  extractFirebaseErrorCode,
-} from '../../../core/utils/validators';
+import { getFirebaseErrorMessage, extractFirebaseErrorCode } from '../../../core/utils/validators';
 
 @Component({
   selector: 'app-login',

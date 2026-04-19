@@ -3,12 +3,9 @@
 import { Component, inject } from '@angular/core';
 
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-import {
-  getFirebaseErrorMessage,
-  extractFirebaseErrorCode,
-} from '../../../core/utils/validators';
+import { getFirebaseErrorMessage, extractFirebaseErrorCode } from '../../../core/utils/validators';
 
 @Component({
   selector: 'app-forgot-password',
@@ -69,8 +66,8 @@ import {
                 stroke-linecap="round"
                 stroke-linejoin="round"
               >
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
               </svg>
             </div>
             <h3 class="mb-2">Email Sent!</h3>

@@ -1,16 +1,16 @@
 # Fluent — Security & Secret Hygiene
 
 This project follows a **no-secrets-in-source** policy. The repository
-contains only **placeholders** and the *names* of the variables we expect to
+contains only **placeholders** and the _names_ of the variables we expect to
 be set at build time.
 
 ## Secret loading order
 
-| Source                                                | When               | Notes                      |
-| ----------------------------------------------------- | ------------------ | -------------------------- |
-| Build-time env vars (`process.env.*`)                 | CI / production    | Highest priority           |
-| `.env` file at repo root                              | Local dev          | Gitignored                 |
-| Placeholder strings in `src/environments/environment.ts` | Fallback        | Fail loudly at runtime     |
+| Source                                                   | When            | Notes                  |
+| -------------------------------------------------------- | --------------- | ---------------------- |
+| Build-time env vars (`process.env.*`)                    | CI / production | Highest priority       |
+| `.env` file at repo root                                 | Local dev       | Gitignored             |
+| Placeholder strings in `src/environments/environment.ts` | Fallback        | Fail loudly at runtime |
 
 Run `node scripts/setup-env.mjs` (auto-invoked by `npm run build` /
 `npm start`) to materialize `environment.local.ts` (dev) and

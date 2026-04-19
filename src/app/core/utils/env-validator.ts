@@ -41,7 +41,7 @@ function isPlaceholder(value: string | undefined | null): boolean {
 export function validateEnvironment(env: FluentEnvironment): EnvValidationResult {
   const problems: string[] = [];
 
-  const authFieldChecks: Array<[string, string]> = [
+  const authFieldChecks: [string, string][] = [
     ['firebase.apiKey', env.firebase?.apiKey],
     ['firebase.authDomain', env.firebase?.authDomain],
     ['firebase.projectId', env.firebase?.projectId],

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Fluent Project Contributors
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { WayfindingComponent } from './wayfinding.component';
@@ -20,14 +21,14 @@ const mockMarker: { addListener: ReturnType<typeof vi.fn>; map: unknown } = {
 
 const mockGoogle = {
   maps: {
-    Map: vi.fn().mockImplementation(function() {
+    Map: vi.fn().mockImplementation(function () {
       return mockMap;
     }),
     marker: {
-      AdvancedMarkerElement: vi.fn().mockImplementation(function() {
+      AdvancedMarkerElement: vi.fn().mockImplementation(function () {
         return mockMarker;
       }),
-      PinElement: vi.fn().mockImplementation(function() {
+      PinElement: vi.fn().mockImplementation(function () {
         return { element: {} };
       }),
     },
@@ -48,7 +49,6 @@ vi.mock('@googlemaps/js-api-loader', () => ({
   }),
 }));
 
-
 import { environment } from '../../../environments/environment';
 
 describe('WayfindingComponent', () => {
@@ -64,7 +64,7 @@ describe('WayfindingComponent', () => {
   beforeEach(async () => {
     // Override environment for test
     environment.googleMapsApiKey = 'mock-key';
-    
+
     Object.values(mockMap).forEach((fn) => (fn as ReturnType<typeof vi.fn>).mockClear?.());
     mockMarker.addListener.mockClear();
     mockMarker.map = null;
@@ -92,11 +92,11 @@ describe('WayfindingComponent', () => {
     fixture = TestBed.createComponent(WayfindingComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-    
+
     // Wait for the async initMap to finish
     let attempts = 0;
     while (component.isLoading() && attempts < 100) {
-      await new Promise(r => setTimeout(r, 10));
+      await new Promise((r) => setTimeout(r, 10));
       fixture.detectChanges();
       attempts++;
     }
@@ -124,7 +124,14 @@ describe('WayfindingComponent', () => {
 
   it('focusZone pans the map and asks the AI for sensory advice', async () => {
     await fixture.whenStable();
-    const zone = { id: 'zone1', center: { lat: 0, lng: 0 }, noiseLevel: 10, radius: 50, crowdDensity: 0.2, isQuietZone: true };
+    const zone = {
+      id: 'zone1',
+      center: { lat: 0, lng: 0 },
+      noiseLevel: 10,
+      radius: 50,
+      crowdDensity: 0.2,
+      isQuietZone: true,
+    };
     await component.focusZone(zone);
     await fixture.whenStable();
 

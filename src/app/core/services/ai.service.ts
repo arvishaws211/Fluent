@@ -13,15 +13,15 @@ interface SensoryAdviceResult {
 }
 interface BatchMatchInput {
   userName: string;
-  partners: Array<{ name: string; interests: string[]; type: 'sponsor' | 'attendee' | 'session' }>;
+  partners: { name: string; interests: string[]; type: 'sponsor' | 'attendee' | 'session' }[];
 }
 interface BatchMatchResult {
-  matches: Array<{
+  matches: {
     partnerName: string;
     type: 'sponsor' | 'attendee' | 'session';
     relevanceScore: number;
     reasoning: string;
-  }>;
+  }[];
 }
 
 /**
@@ -51,13 +51,13 @@ export class AiService {
 
   private callBatchMatchmaking = httpsCallable<BatchMatchInput, BatchMatchResult>(
     this.functions,
-    'aiBatchMatchmaking'
+    'aiBatchMatchmaking',
   );
 
   async generateMatchReasoning(
     userName: string,
     partnerName: string,
-    commonInterests: string[]
+    commonInterests: string[],
   ): Promise<string> {
     try {
       const { data } = await this.callMatchReasoning({ userName, partnerName, commonInterests });

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Fluent Project Contributors
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { Router, provideRouter } from '@angular/router';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
@@ -20,10 +21,7 @@ describe('LoginComponent', () => {
     };
     await TestBed.configureTestingModule({
       imports: [LoginComponent, ReactiveFormsModule],
-      providers: [
-        { provide: AuthService, useValue: authMock },
-        provideRouter([]),
-      ],
+      providers: [{ provide: AuthService, useValue: authMock }, provideRouter([])],
     }).compileComponents();
 
     fixture = TestBed.createComponent(LoginComponent);
@@ -56,7 +54,7 @@ describe('LoginComponent', () => {
 
     component.loginForm.setValue({ email: 'test@example.com', password: 'password123' });
     await component.onSubmit();
-    
+
     expect(authMock.login).toHaveBeenCalledWith('test@example.com', 'password123');
     expect(component.successMessage).toMatch(/successful/i);
 

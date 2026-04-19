@@ -61,14 +61,20 @@ export class CheckInService {
   // ---- Biometric (WebAuthn) ----------------------------------------------
 
   isBiometricSupported(): boolean {
-    return typeof window !== 'undefined'
-      && 'credentials' in navigator
-      && typeof PublicKeyCredential !== 'undefined';
+    return (
+      typeof window !== 'undefined' &&
+      'credentials' in navigator &&
+      typeof PublicKeyCredential !== 'undefined'
+    );
   }
 
   async biometricCheckIn(): Promise<CheckInStatus> {
     if (!this.isBiometricSupported()) {
-      return this.fail('biometric', 'no-webauthn-support', 'Your device does not support biometric sign-in.');
+      return this.fail(
+        'biometric',
+        'no-webauthn-support',
+        'Your device does not support biometric sign-in.',
+      );
     }
     if (!navigator.onLine) {
       return this.fail('biometric', 'offline', 'You appear to be offline. Try the QR fallback.');
@@ -107,9 +113,17 @@ export class CheckInService {
       const name = (err as { name?: string } | null)?.name ?? '';
       logger.warn('checkIn.biometric', err);
       if (name === 'NotAllowedError') {
-        return this.fail('biometric', 'permission-denied', 'Biometric prompt was cancelled or blocked.');
+        return this.fail(
+          'biometric',
+          'permission-denied',
+          'Biometric prompt was cancelled or blocked.',
+        );
       }
-      return this.fail('biometric', 'unknown', 'Biometric verification failed. Try the QR fallback.');
+      return this.fail(
+        'biometric',
+        'unknown',
+        'Biometric verification failed. Try the QR fallback.',
+      );
     } finally {
       this.isScanningSignal.set(false);
     }

@@ -30,11 +30,14 @@ test.describe('public surface', () => {
     await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible();
   });
 
-  test('axe finds no critical/serious accessibility violations on /login', async ({ page, axe }) => {
+  test('axe finds no critical/serious accessibility violations on /login', async ({
+    page,
+    axe,
+  }) => {
     await page.goto('/login');
     const results = await axe(page).withTags(['wcag2a', 'wcag2aa']).analyze();
     const blocking = results.violations.filter(
-      (v) => v.impact === 'critical' || v.impact === 'serious'
+      (v) => v.impact === 'critical' || v.impact === 'serious',
     );
     expect(blocking, JSON.stringify(blocking, null, 2)).toEqual([]);
   });

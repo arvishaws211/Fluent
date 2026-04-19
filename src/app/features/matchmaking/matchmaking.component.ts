@@ -2,7 +2,7 @@
 // Copyright (c) 2026 Fluent Project Contributors
 
 import { TitleCasePipe } from '@angular/common';
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { IdentityService } from '../../core/services/identity.service';
 import { MatchmakingService } from '../../core/services/matchmaking.service';

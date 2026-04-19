@@ -38,7 +38,7 @@ export class AuthService {
 
   async login(email: string, pass: string): Promise<User> {
     const cred = await runInInjectionContext(this.injector, () =>
-      signInWithEmailAndPassword(this.fireAuth, email, pass)
+      signInWithEmailAndPassword(this.fireAuth, email, pass),
     );
     return cred.user;
   }
@@ -54,15 +54,13 @@ export class AuthService {
 
   async register(email: string, pass: string): Promise<User> {
     const cred = await runInInjectionContext(this.injector, () =>
-      createUserWithEmailAndPassword(this.fireAuth, email, pass)
+      createUserWithEmailAndPassword(this.fireAuth, email, pass),
     );
     return cred.user;
   }
 
   async resetPassword(email: string): Promise<void> {
-    await runInInjectionContext(this.injector, () =>
-      sendPasswordResetEmail(this.fireAuth, email)
-    );
+    await runInInjectionContext(this.injector, () => sendPasswordResetEmail(this.fireAuth, email));
   }
 
   async logout(): Promise<void> {

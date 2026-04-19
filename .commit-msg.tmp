@@ -1,0 +1,19 @@
+Add typecheck/lint/format/stylelint scripts and normalize to a green baseline
+
+- package.json: add typecheck, lint, lint:fix, format, format:check,
+  stylelint, stylelint:fix scripts (lint was previously just tsc).
+- eslint.config.js: switch to projectService:true so it cooperates with
+  the Angular solution-style tsconfig; ignore e2e and *.config files
+  that live outside the TS projects.
+- Apply eslint --fix auto-fixes (Array<T>->T[], consistent type imports,
+  self-closing template tags) across the repo.
+- Remove unused imports (Router, signal, computed), rename ignored
+  guard args to _route/_state, and tighten two `any` casts.
+- Apply Prettier formatting to 74 files (whitespace / trailing commas /
+  import wrapping only - no logic changes).
+- Apply stylelint --fix in src/styles.css (rgba->rgb, modern color
+  notation, alpha percentages, vendor prefix cleanup) and hand-fix
+  three residual declaration-block-no-duplicate-properties errors.
+- Rename @keyframes fadeIn -> fade-in to satisfy kebab-case rule and
+  update the referencing animation declaration.
+- Delete empty src/app/app.css which tripped no-empty-source.

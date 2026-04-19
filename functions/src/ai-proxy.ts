@@ -31,7 +31,7 @@ function getModel(): GenerativeModel {
   if (!PROJECT_ID) {
     throw new HttpsError(
       'failed-precondition',
-      'GCP project not detected; ensure the function is deployed to a real GCP project.'
+      'GCP project not detected; ensure the function is deployed to a real GCP project.',
     );
   }
   const client = new VertexAI({ project: PROJECT_ID, location: LOCATION });
@@ -76,7 +76,10 @@ export const aiMatchReasoning = onCall<MatchReasoningInput, Promise<{ reasoning:
     requireAuth(req);
     const { userName, partnerName, commonInterests } = req.data ?? {};
     if (!userName || !partnerName || !Array.isArray(commonInterests)) {
-      throw new HttpsError('invalid-argument', 'userName, partnerName, commonInterests are required.');
+      throw new HttpsError(
+        'invalid-argument',
+        'userName, partnerName, commonInterests are required.',
+      );
     }
     const prompt = [
       'You are an AI networking agent for the Fluent event platform.',
@@ -90,12 +93,18 @@ export const aiMatchReasoning = onCall<MatchReasoningInput, Promise<{ reasoning:
 
     try {
       const reasoning = await generate(prompt);
-      return { reasoning: reasoning || `Connect with ${partnerName} on ${commonInterests[0] ?? 'shared interests'}.` };
+      return {
+        reasoning:
+          reasoning ||
+          `Connect with ${partnerName} on ${commonInterests[0] ?? 'shared interests'}.`,
+      };
     } catch (err) {
       logger.error('aiMatchReasoning failed', err);
-      return { reasoning: `Connect with ${partnerName} to discuss ${commonInterests[0] ?? 'collaboration'}.` };
+      return {
+        reasoning: `Connect with ${partnerName} to discuss ${commonInterests[0] ?? 'collaboration'}.`,
+      };
     }
-  }
+  },
 );
 
 export interface SensoryAdviceInput {
@@ -109,7 +118,10 @@ export const aiSensoryAdvice = onCall<SensoryAdviceInput, Promise<{ advice: stri
     requireAuth(req);
     const { location, noiseLevel } = req.data ?? {};
     if (typeof location !== 'string' || typeof noiseLevel !== 'number') {
-      throw new HttpsError('invalid-argument', 'location:string and noiseLevel:number are required.');
+      throw new HttpsError(
+        'invalid-argument',
+        'location:string and noiseLevel:number are required.',
+      );
     }
     const prompt = [
       `Location: ${location}`,
@@ -121,26 +133,35 @@ export const aiSensoryAdvice = onCall<SensoryAdviceInput, Promise<{ advice: stri
 
     try {
       const advice = await generate(prompt);
-      return { advice: advice || (noiseLevel > 70 ? 'This area is quite lively.' : 'This area is relatively calm.') };
+      return {
+        advice:
+          advice ||
+          (noiseLevel > 70 ? 'This area is quite lively.' : 'This area is relatively calm.'),
+      };
     } catch (err) {
       logger.error('aiSensoryAdvice failed', err);
-      return { advice: noiseLevel > 70 ? 'This area is quite lively. A quiet retreat may help.' : 'This area is relatively calm.' };
+      return {
+        advice:
+          noiseLevel > 70
+            ? 'This area is quite lively. A quiet retreat may help.'
+            : 'This area is relatively calm.',
+      };
     }
-  }
+  },
 );
 
 export interface BatchMatchmakingInput {
   userName: string;
-  partners: Array<{ name: string; interests: string[]; type: 'sponsor' | 'attendee' | 'session' }>;
+  partners: { name: string; interests: string[]; type: 'sponsor' | 'attendee' | 'session' }[];
 }
 
 export interface BatchMatchmakingOutput {
-  matches: Array<{
+  matches: {
     partnerName: string;
     type: 'sponsor' | 'attendee' | 'session';
     relevanceScore: number;
     reasoning: string;
-  }>;
+  }[];
 }
 
 /**
@@ -179,9 +200,9 @@ export const aiBatchMatchmaking = onCall<BatchMatchmakingInput, Promise<BatchMat
           relevanceScore: 0.7 + Math.min(0.3, p.interests.length * 0.05),
           reasoning,
         };
-      })
+      }),
     );
 
     return { matches };
-  }
+  },
 );

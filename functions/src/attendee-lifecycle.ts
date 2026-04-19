@@ -33,17 +33,20 @@ export const onAttendeeCreate = beforeUserCreated(async (event) => {
   const u = event.data;
   if (!u?.uid) return;
   try {
-    await db.collection('attendees').doc(u.uid).set(
-      {
-        displayName: u.displayName ?? u.email?.split('@')[0] ?? 'Attendee',
-        interests: [],
-        role: 'attendee',
-        ssiIdentifier: `did:firebase:${u.uid}`,
-        createdAt: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp(),
-      },
-      { merge: true }
-    );
+    await db
+      .collection('attendees')
+      .doc(u.uid)
+      .set(
+        {
+          displayName: u.displayName ?? u.email?.split('@')[0] ?? 'Attendee',
+          interests: [],
+          role: 'attendee',
+          ssiIdentifier: `did:firebase:${u.uid}`,
+          createdAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true },
+      );
     await auth.setCustomUserClaims(u.uid, { role: 'attendee' });
   } catch (err) {
     logger.error('Failed to seed attendee profile', err);
@@ -66,10 +69,10 @@ export const setRoleClaim = onCall<SetRoleInput, Promise<{ ok: true }>>(
       throw new HttpsError('invalid-argument', 'targetUid and valid role are required.');
     }
     await auth.setCustomUserClaims(targetUid, { role });
-    await db.collection('attendees').doc(targetUid).set(
-      { role, updatedAt: FieldValue.serverTimestamp() },
-      { merge: true }
-    );
+    await db
+      .collection('attendees')
+      .doc(targetUid)
+      .set({ role, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
     return { ok: true };
-  }
+  },
 );

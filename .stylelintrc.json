@@ -8,11 +8,5 @@
     "declaration-empty-line-before": null,
     "comment-empty-line-before": null
   },
-  "ignoreFiles": [
-    "dist/**",
-    "node_modules/**",
-    ".angular/**",
-    "coverage/**",
-    "functions/**"
-  ]
+  "ignoreFiles": ["dist/**", "node_modules/**", ".angular/**", "coverage/**", "functions/**"]
 }

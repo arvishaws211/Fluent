@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Fluent Project Contributors
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -283,7 +283,7 @@ export class RegisterComponent {
       this.errorMessage = '';
       this.successMessage = '';
       try {
-        const { email, password, displayName } = this.registerForm.value;
+        const { email, password } = this.registerForm.value;
         await this.authService.register(email!, password!);
         this.successMessage = 'Account created successfully! Redirecting...';
         setTimeout(() => this.router.navigate(['/dashboard']), 1500);

@@ -89,9 +89,9 @@ import { logger } from './core/utils/logger';
                     aria-hidden="true"
                     focusable="false"
                   >
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                    <polyline points="16 17 21 12 16 7"></polyline>
-                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
                   </svg>
                 </button>
               </div>
@@ -101,7 +101,7 @@ import { logger } from './core/utils/logger';
       </nav>
 
       <main id="main-content" class="main-content" tabindex="-1">
-        <router-outlet></router-outlet>
+        <router-outlet />
       </main>
 
       <footer class="glass-card footer">

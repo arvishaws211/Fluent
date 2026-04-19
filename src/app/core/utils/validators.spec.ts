@@ -32,7 +32,9 @@ describe('passwordValidator', () => {
 
 describe('getFirebaseErrorMessage', () => {
   it('translates invalid credential codes', () => {
-    expect(getFirebaseErrorMessage('auth/invalid-login-credentials')).toMatch(/Invalid email or password/i);
+    expect(getFirebaseErrorMessage('auth/invalid-login-credentials')).toMatch(
+      /Invalid email or password/i,
+    );
     expect(getFirebaseErrorMessage('auth/user-not-found')).toMatch(/Invalid email or password/i);
   });
 

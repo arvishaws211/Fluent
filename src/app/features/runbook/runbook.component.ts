@@ -2,13 +2,10 @@
 // Copyright (c) 2026 Fluent Project Contributors
 
 import { DatePipe, TitleCasePipe } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import {
-  RunbookPriority,
-  RunbookStatus,
-  StaffRunbookService,
-} from '../../core/services/staff-runbook.service';
+import type { RunbookPriority, RunbookStatus } from '../../core/services/staff-runbook.service';
+import { StaffRunbookService } from '../../core/services/staff-runbook.service';
 
 const STATUSES: RunbookStatus[] = ['pending', 'in-progress', 'completed', 'blocked'];
 const PRIORITIES: RunbookPriority[] = ['low', 'medium', 'high'];

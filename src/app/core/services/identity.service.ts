@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Fluent Project Contributors
 
-import { computed, inject, Injectable, Signal, signal } from '@angular/core';
+import type { Signal } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Auth, user } from '@angular/fire/auth';
 import {
@@ -12,7 +13,8 @@ import {
   setDoc,
   type DocumentData,
 } from '@angular/fire/firestore';
-import { Observable, of, switchMap } from 'rxjs';
+import type { Observable } from 'rxjs';
+import { of, switchMap } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { logger } from '../utils/logger';
 
@@ -86,9 +88,9 @@ export class IdentityService {
             role: 'attendee',
             ssiIdentifier: `did:firebase:${u.uid}`,
           });
-        })
+        }),
       );
-    })
+    }),
   );
 
   readonly currentAttendee: Signal<AttendeeProfile | null> = toSignal(this.profile$, {
@@ -115,7 +117,7 @@ export class IdentityService {
     await setDoc(
       doc(this.firestore, `attendees/${me.id}`),
       { interests: cleaned, updatedAt: serverTimestamp() },
-      { merge: true }
+      { merge: true },
     );
   }
 
@@ -135,7 +137,9 @@ export class IdentityService {
       const payload = `${me.ssiIdentifier}::${challenge}::${hex}`;
       const enc = new TextEncoder().encode(payload);
       const digest = await crypto.subtle.digest('SHA-256', enc);
-      const sig = Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
+      const sig = Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join(
+        '',
+      );
       return `vp.${btoa(payload)}.${sig}`;
     } finally {
       this.vpInFlight.set(false);

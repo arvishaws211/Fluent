@@ -8,7 +8,7 @@ describe('WayfindingService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [WayfindingService]
+      providers: [WayfindingService],
     });
     service = TestBed.inject(WayfindingService);
   });
@@ -35,13 +35,13 @@ describe('WayfindingService', () => {
     // Standard mode: should show all zones
     service.sensoryModeEnabled.set(false);
     const initialZones = service.quietRouteZones();
-    
+
     // Sensory mode: should only show quiet zones
     service.sensoryModeEnabled.set(true);
     const quietZones = service.quietRouteZones();
-    
+
     expect(quietZones.length).toBeLessThanOrEqual(initialZones.length);
-    quietZones.forEach(zone => {
+    quietZones.forEach((zone) => {
       expect(zone.isQuietZone || zone.noiseLevel < 30).toBeTruthy();
     });
   });
@@ -50,7 +50,7 @@ describe('WayfindingService', () => {
     const start = { lat: 0, lng: 0 };
     const end = { lat: 10, lng: 10 };
     const route = await service.getOptimizedRoute(start, end);
-    
+
     expect(route.length).toBe(3);
     expect(route[0]).toEqual(start);
     expect(route[2]).toEqual(end);

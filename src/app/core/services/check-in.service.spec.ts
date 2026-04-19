@@ -31,7 +31,10 @@ const ATTENDEE = {
 
 describe('CheckInService', () => {
   let service: CheckInService;
-  let identityMock: { currentAttendee: ReturnType<typeof signal>; generateVerifiablePresentation: ReturnType<typeof vi.fn> };
+  let identityMock: {
+    currentAttendee: ReturnType<typeof signal>;
+    generateVerifiablePresentation: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(() => {
     identityMock = {
@@ -81,14 +84,20 @@ describe('CheckInService', () => {
         configurable: true,
         value: class {},
       });
-      Object.defineProperty(globalThis.navigator, 'onLine', { configurable: true, get: () => false });
+      Object.defineProperty(globalThis.navigator, 'onLine', {
+        configurable: true,
+        get: () => false,
+      });
       const status = await service.biometricCheckIn();
       expect(status.success).toBe(false);
       expect(status.errorMessage).toMatch(/offline/i);
     });
 
     it('fails when no attendee is signed in', async () => {
-      Object.defineProperty(globalThis, 'PublicKeyCredential', { configurable: true, value: class {} });
+      Object.defineProperty(globalThis, 'PublicKeyCredential', {
+        configurable: true,
+        value: class {},
+      });
       identityMock.currentAttendee.set(null);
       const status = await service.biometricCheckIn();
       expect(status.success).toBe(false);

@@ -27,11 +27,19 @@ interface Partner {
  * project compiles and the demo works before that collection is seeded.
  */
 const DEMO_PARTNERS: readonly Partner[] = Object.freeze([
-  { name: 'Google Cloud Vertex AI',          type: 'sponsor',  interests: ['GenAI', 'Infrastructure', 'Cloud'] },
-  { name: 'Sustainability in Tech Forum',    type: 'session',  interests: ['Sustainability', 'ESG'] },
-  { name: 'Sarah Chen (Lead Architect)',     type: 'attendee', interests: ['Angular', 'Spatial Computing'] },
-  { name: 'AR Wayfinding Workshop',          type: 'session',  interests: ['XR', 'Accessibility'] },
-  { name: 'Firebase Hackathon Booth',        type: 'sponsor',  interests: ['Firebase', 'Realtime'] },
+  {
+    name: 'Google Cloud Vertex AI',
+    type: 'sponsor',
+    interests: ['GenAI', 'Infrastructure', 'Cloud'],
+  },
+  { name: 'Sustainability in Tech Forum', type: 'session', interests: ['Sustainability', 'ESG'] },
+  {
+    name: 'Sarah Chen (Lead Architect)',
+    type: 'attendee',
+    interests: ['Angular', 'Spatial Computing'],
+  },
+  { name: 'AR Wayfinding Workshop', type: 'session', interests: ['XR', 'Accessibility'] },
+  { name: 'Firebase Hackathon Booth', type: 'sponsor', interests: ['Firebase', 'Realtime'] },
 ]);
 
 @Injectable({ providedIn: 'root' })
@@ -49,7 +57,7 @@ export class MatchmakingService {
   readonly error = this.errorSignal.asReadonly();
 
   readonly topMatches = computed(() =>
-    [...this.matches()].sort((a, b) => b.relevanceScore - a.relevanceScore).slice(0, 3)
+    [...this.matches()].sort((a, b) => b.relevanceScore - a.relevanceScore).slice(0, 3),
   );
 
   /**

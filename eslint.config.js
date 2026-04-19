@@ -28,7 +28,7 @@ module.exports = tseslint.config(
     processor: angular.processInlineTemplates,
     languageOptions: {
       parserOptions: {
-        project: ['tsconfig.json', 'tsconfig.spec.json', 'functions/tsconfig.json'],
+        projectService: true,
         tsconfigRootDir: __dirname,
       },
     },
@@ -71,6 +71,12 @@ module.exports = tseslint.config(
       'test-results/**',
       'coverage/**',
       '*.config.js',
+      'vitest.config.ts',
+      'playwright.config.ts',
+      'e2e/**',
+      'src/environments/environment.local.ts',
+      'src/environments/environment.prod.ts',
+      'src/environments/environment.example.ts',
     ],
   },
 );

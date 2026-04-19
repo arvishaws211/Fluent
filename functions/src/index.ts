@@ -12,10 +12,6 @@
  * the Functions runtime; App Check enforcement is opt-in via `enforceAppCheck`.
  */
 
-export {
-  aiMatchReasoning,
-  aiSensoryAdvice,
-  aiBatchMatchmaking,
-} from './ai-proxy';
+export { aiMatchReasoning, aiSensoryAdvice, aiBatchMatchmaking } from './ai-proxy';
 
 export { onAttendeeCreate, setRoleClaim } from './attendee-lifecycle';

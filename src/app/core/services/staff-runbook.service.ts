@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Fluent Project Contributors
 
-import { computed, inject, Injectable, Signal, signal } from '@angular/core';
+import type { Signal } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import type { Timestamp } from '@angular/fire/firestore';
 import {
   collection,
   collectionData,
@@ -12,11 +14,11 @@ import {
   query,
   serverTimestamp,
   setDoc,
-  Timestamp,
   updateDoc,
   type DocumentData,
 } from '@angular/fire/firestore';
-import { Observable, of } from 'rxjs';
+import type { Observable } from 'rxjs';
+import { of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { logger } from '../utils/logger';
 
@@ -65,19 +67,19 @@ export class StaffRunbookService {
       const q = query(ref, orderBy('lastUpdated', 'desc'));
       return collectionData(q, { idField: 'id' }).pipe(
         map((rows) =>
-          (rows as Array<RunbookDoc & { id: string }>).map((r) => ({
+          (rows as (RunbookDoc & { id: string })[]).map((r) => ({
             id: r.id,
             title: r.title,
             assignedTo: r.assignedTo,
             status: r.status,
             priority: r.priority,
             lastUpdated: r.lastUpdated?.toDate?.() ?? new Date(),
-          }))
+          })),
         ),
         catchError((err) => {
           logger.error('runbook.snapshot', err);
           return of<RunbookTask[]>([]);
-        })
+        }),
       );
     } catch (err) {
       logger.error('runbook.subscribe', err);
@@ -88,7 +90,7 @@ export class StaffRunbookService {
   readonly tasks: Signal<RunbookTask[]> = toSignal(this.tasks$, { initialValue: [] });
 
   readonly highPriorityTasks = computed(() =>
-    this.tasks().filter((t) => t.priority === 'high' && t.status !== 'completed')
+    this.tasks().filter((t) => t.priority === 'high' && t.status !== 'completed'),
   );
 
   readonly completionRate = computed(() => {

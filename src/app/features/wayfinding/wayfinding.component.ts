@@ -2,16 +2,8 @@
 // Copyright (c) 2026 Fluent Project Contributors
 
 import { TitleCasePipe } from '@angular/common';
-import {
-  AfterViewInit,
-  Component,
-  ElementRef,
-  ViewChild,
-  computed,
-  effect,
-  inject,
-  signal,
-} from '@angular/core';
+import type { AfterViewInit, ElementRef } from '@angular/core';
+import { Component, ViewChild, computed, effect, inject, signal } from '@angular/core';
 import { importLibrary, setOptions } from '@googlemaps/js-api-loader';
 import { environment } from '../../../environments/environment';
 import { AiService } from '../../core/services/ai.service';
@@ -422,7 +414,7 @@ export class WayfindingComponent implements AfterViewInit {
   private async initMap(): Promise<void> {
     if (!environment.googleMapsApiKey || environment.googleMapsApiKey.startsWith('__')) {
       // In tests, we still want to attempt initialization with mock keys
-      if ((globalThis as any).IS_ANGULAR_TEST) {
+      if ((globalThis as { IS_ANGULAR_TEST?: boolean }).IS_ANGULAR_TEST) {
         logger.info('wayfinding.initMap', 'using mock/placeholder key in test environment');
       } else {
         this.isLoading.set(false);

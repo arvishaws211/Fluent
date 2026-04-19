@@ -1,45 +1,55 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Fluent Project Contributors
-import { Routes } from '@angular/router';
+import type { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-  { 
-    path: 'login', 
-    loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent) 
+  {
+    path: 'login',
+    loadComponent: () =>
+      import('./features/auth/login/login.component').then((m) => m.LoginComponent),
   },
-  { 
-    path: 'register', 
-    loadComponent: () => import('./features/auth/register/register.component').then(m => m.RegisterComponent) 
+  {
+    path: 'register',
+    loadComponent: () =>
+      import('./features/auth/register/register.component').then((m) => m.RegisterComponent),
   },
-  { 
-    path: 'forgot-password', 
-    loadComponent: () => import('./features/auth/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent) 
+  {
+    path: 'forgot-password',
+    loadComponent: () =>
+      import('./features/auth/forgot-password/forgot-password.component').then(
+        (m) => m.ForgotPasswordComponent,
+      ),
   },
-  { 
-    path: 'dashboard', 
+  {
+    path: 'dashboard',
     canActivate: [authGuard],
-    loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent) 
+    loadComponent: () =>
+      import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
   },
-  { 
-    path: 'check-in', 
+  {
+    path: 'check-in',
     canActivate: [authGuard],
-    loadComponent: () => import('./features/check-in/check-in.component').then(m => m.CheckInComponent) 
+    loadComponent: () =>
+      import('./features/check-in/check-in.component').then((m) => m.CheckInComponent),
   },
-  { 
-    path: 'wayfinding', 
+  {
+    path: 'wayfinding',
     canActivate: [authGuard],
-    loadComponent: () => import('./features/wayfinding/wayfinding.component').then(m => m.WayfindingComponent) 
+    loadComponent: () =>
+      import('./features/wayfinding/wayfinding.component').then((m) => m.WayfindingComponent),
   },
-  { 
-    path: 'matchmaking', 
+  {
+    path: 'matchmaking',
     canActivate: [authGuard],
-    loadComponent: () => import('./features/matchmaking/matchmaking.component').then(m => m.MatchmakingComponent) 
+    loadComponent: () =>
+      import('./features/matchmaking/matchmaking.component').then((m) => m.MatchmakingComponent),
   },
-  { 
-    path: 'runbook', 
+  {
+    path: 'runbook',
     canActivate: [authGuard],
-    loadComponent: () => import('./features/runbook/runbook.component').then(m => m.RunbookComponent) 
-  }
+    loadComponent: () =>
+      import('./features/runbook/runbook.component').then((m) => m.RunbookComponent),
+  },
 ];

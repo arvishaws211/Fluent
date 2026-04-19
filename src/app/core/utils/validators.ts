@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Fluent Project Contributors
-import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+import type { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 
-export const passwordValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
+export const passwordValidator: ValidatorFn = (
+  control: AbstractControl,
+): ValidationErrors | null => {
   const value = control.value;
   if (!value) return null;
 
@@ -12,7 +14,8 @@ export const passwordValidator: ValidatorFn = (control: AbstractControl): Valida
   const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(value);
   const isValidLength = value.length >= 8;
 
-  const passwordValid = hasUpperCase && hasLowerCase && hasNumeric && hasSpecialChar && isValidLength;
+  const passwordValid =
+    hasUpperCase && hasLowerCase && hasNumeric && hasSpecialChar && isValidLength;
 
   if (!passwordValid) {
     return {
@@ -21,8 +24,8 @@ export const passwordValidator: ValidatorFn = (control: AbstractControl): Valida
         hasLowerCase,
         hasNumeric,
         hasSpecialChar,
-        isValidLength
-      }
+        isValidLength,
+      },
     };
   }
 
@@ -43,19 +46,20 @@ export function extractFirebaseErrorCode(err: unknown): string {
 }
 
 export function getFirebaseErrorMessage(code: string): string {
-  // Normalize the code (Firebase SDK codes are like 'auth/user-not-found', 
+  // Normalize the code (Firebase SDK codes are like 'auth/user-not-found',
   // but raw REST API errors can be 'INVALID_LOGIN_CREDENTIALS')
   const errorCode = code?.toLowerCase() || '';
 
-  if (errorCode.includes('user-not-found') || 
-      errorCode.includes('wrong-password') || 
-      errorCode.includes('invalid_login_credentials') ||
-      errorCode.includes('invalid-login-credentials')) {
+  if (
+    errorCode.includes('user-not-found') ||
+    errorCode.includes('wrong-password') ||
+    errorCode.includes('invalid_login_credentials') ||
+    errorCode.includes('invalid-login-credentials')
+  ) {
     return 'Invalid email or password. Please try again.';
   }
 
-  if (errorCode.includes('email_exists') || 
-      errorCode.includes('email-already-in-use')) {
+  if (errorCode.includes('email_exists') || errorCode.includes('email-already-in-use')) {
     return 'This email is already registered. Please sign in instead.';
   }
 

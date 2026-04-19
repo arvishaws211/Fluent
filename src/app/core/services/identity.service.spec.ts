@@ -28,7 +28,7 @@ vi.mock('@angular/fire/firestore', () => ({
       interests: ['Angular', 'Firebase'],
       role: 'attendee',
       ssiIdentifier: 'did:firebase:u-1',
-    })
+    }),
   ),
   setDoc: vi.fn(() => Promise.resolve()),
   serverTimestamp: vi.fn(() => 'SERVER_TS'),
@@ -78,7 +78,7 @@ describe('IdentityService', () => {
       expect.objectContaining({
         interests: ['AI', 'GenAI', 'Cloud'],
         updatedAt: 'SERVER_TS',
-      })
+      }),
     );
   });
 
