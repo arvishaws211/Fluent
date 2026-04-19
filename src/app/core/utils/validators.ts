@@ -27,6 +27,19 @@ export const passwordValidator: ValidatorFn = (control: AbstractControl): Valida
   return null;
 };
 
+/**
+ * Safely extracts a Firebase-style error code or fallback message from an
+ * `unknown` catch variable. Avoids the `err: any` anti-pattern at call sites.
+ */
+export function extractFirebaseErrorCode(err: unknown): string {
+  if (err && typeof err === 'object') {
+    const candidate = err as { code?: unknown; message?: unknown };
+    if (typeof candidate.code === 'string') return candidate.code;
+    if (typeof candidate.message === 'string') return candidate.message;
+  }
+  return '';
+}
+
 export function getFirebaseErrorMessage(code: string): string {
   // Normalize the code (Firebase SDK codes are like 'auth/user-not-found', 
   // but raw REST API errors can be 'INVALID_LOGIN_CREDENTIALS')

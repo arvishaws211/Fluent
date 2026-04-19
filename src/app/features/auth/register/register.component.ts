@@ -3,7 +3,11 @@ import { Component, inject, signal } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-import { passwordValidator, getFirebaseErrorMessage } from '../../../core/utils/validators';
+import {
+  passwordValidator,
+  getFirebaseErrorMessage,
+  extractFirebaseErrorCode,
+} from '../../../core/utils/validators';
 
 @Component({
   selector: 'app-register',
@@ -281,8 +285,8 @@ export class RegisterComponent {
         await this.authService.register(email!, password!);
         this.successMessage = 'Account created successfully! Redirecting...';
         setTimeout(() => this.router.navigate(['/dashboard']), 1500);
-      } catch (err: any) {
-        this.errorMessage = getFirebaseErrorMessage(err.code || err.message);
+      } catch (err: unknown) {
+        this.errorMessage = getFirebaseErrorMessage(extractFirebaseErrorCode(err));
       } finally {
         this.isLoading = false;
       }

@@ -3,7 +3,10 @@ import { Component, inject } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-import { getFirebaseErrorMessage } from '../../../core/utils/validators';
+import {
+  getFirebaseErrorMessage,
+  extractFirebaseErrorCode,
+} from '../../../core/utils/validators';
 
 @Component({
   selector: 'app-login',
@@ -288,8 +291,8 @@ export class LoginComponent {
         await this.authService.login(email!, password!);
         this.successMessage = 'Login successful! Redirecting...';
         setTimeout(() => this.router.navigate(['/dashboard']), 1000);
-      } catch (err: any) {
-        this.errorMessage = getFirebaseErrorMessage(err.code || err.message);
+      } catch (err: unknown) {
+        this.errorMessage = getFirebaseErrorMessage(extractFirebaseErrorCode(err));
       } finally {
         this.isLoading = false;
       }
@@ -305,8 +308,8 @@ export class LoginComponent {
     try {
       await this.authService.loginWithGoogle();
       this.router.navigate(['/dashboard']);
-    } catch (err: any) {
-      this.errorMessage = getFirebaseErrorMessage(err.code);
+    } catch (err: unknown) {
+      this.errorMessage = getFirebaseErrorMessage(extractFirebaseErrorCode(err));
     } finally {
       this.isLoading = false;
     }

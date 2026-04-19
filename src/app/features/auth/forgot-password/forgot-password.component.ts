@@ -3,7 +3,10 @@ import { Component, inject } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-import { getFirebaseErrorMessage } from '../../../core/utils/validators';
+import {
+  getFirebaseErrorMessage,
+  extractFirebaseErrorCode,
+} from '../../../core/utils/validators';
 
 @Component({
   selector: 'app-forgot-password',
@@ -174,8 +177,8 @@ export class ForgotPasswordComponent {
         const { email } = this.forgotForm.value;
         await this.authService.resetPassword(email!);
         this.isSent = true;
-      } catch (err: any) {
-        this.errorMessage = getFirebaseErrorMessage(err.code || err.message);
+      } catch (err: unknown) {
+        this.errorMessage = getFirebaseErrorMessage(extractFirebaseErrorCode(err));
       } finally {
         this.isLoading = false;
       }
