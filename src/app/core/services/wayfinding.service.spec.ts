@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Fluent Project Contributors
 import { TestBed } from '@angular/core/testing';
 import { WayfindingService } from './wayfinding.service';
 

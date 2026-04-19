@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Fluent Project Contributors
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 

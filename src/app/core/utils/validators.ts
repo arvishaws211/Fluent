@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Fluent Project Contributors
 import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 
 export const passwordValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
