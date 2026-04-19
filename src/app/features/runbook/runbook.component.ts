@@ -147,7 +147,7 @@ const PRIORITIES: RunbookPriority[] = ['low', 'medium', 'high'];
                   <select
                     [id]="'status-' + task.id"
                     [value]="task.status"
-                    (change)="updateStatus(task.id, asStatus($any($event.target).value))"
+                    (change)="onStatusChange(task.id, $event)"
                     class="glass-input"
                   >
                     @for (s of STATUSES; track s) {
@@ -398,12 +398,13 @@ export class RunbookComponent {
     this.showNew.set(!this.showNew());
   }
 
-  asStatus(value: string): RunbookStatus {
-    return value as RunbookStatus;
-  }
-
   async updateStatus(taskId: string, status: RunbookStatus): Promise<void> {
     await this.runbookService.updateTaskStatus(taskId, status);
+  }
+
+  onStatusChange(taskId: string, event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    void this.updateStatus(taskId, target.value as RunbookStatus);
   }
 
   async createTask(): Promise<void> {

@@ -93,7 +93,7 @@ import { WayfindingService, type Zone } from '../../core/services/wayfinding.ser
               type="text"
               placeholder="Search rooms, booths, or exits…"
               [value]="searchQuery()"
-              (input)="searchQuery.set($any($event.target).value)"
+              (input)="onSearchInput($event)"
             />
           </div>
 
@@ -408,6 +408,11 @@ export class WayfindingComponent implements AfterViewInit {
 
   constructor() {
     effect(() => this.updateMapForSensoryMode(this.sensoryMode()));
+  }
+
+  onSearchInput(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.searchQuery.set(target.value);
   }
 
   async ngAfterViewInit(): Promise<void> {
