@@ -28,17 +28,19 @@ import { WayfindingService, type Zone } from '../../core/services/wayfinding.ser
         <div class="header-text">
           <h2 class="gradient-text">Event navigation</h2>
           <p class="text-secondary">
-            Real-time venue wayfinding powered by Google Maps Platform.
-            Sensory mode uses IoT noise telemetry to highlight quieter routes.
+            Real-time venue wayfinding powered by Google Maps Platform. Sensory mode uses IoT noise
+            telemetry to highlight quieter routes.
           </p>
         </div>
 
         <div class="map-controls">
-          <button type="button"
-                  class="btn sensory-btn"
-                  [class.active]="sensoryMode()"
-                  [attr.aria-pressed]="sensoryMode()"
-                  (click)="toggleSensory()">
+          <button
+            type="button"
+            class="btn sensory-btn"
+            [class.active]="sensoryMode()"
+            [attr.aria-pressed]="sensoryMode()"
+            (click)="toggleSensory()"
+          >
             Sensory mode: {{ sensoryMode() ? 'On' : 'Off' }}
           </button>
         </div>
@@ -49,25 +51,36 @@ import { WayfindingService, type Zone } from '../../core/services/wayfinding.ser
           <h3 id="map-heading" class="visually-hidden">Interactive venue map</h3>
 
           <div #mapContainer class="interactive-map" role="application" aria-label="Venue map">
-            <div class="map-loading" *ngIf="isLoading()" aria-live="polite">
-              <div class="spinner" aria-hidden="true"></div>
-              <p>Initializing map…</p>
-            </div>
+            @if (isLoading()) {
+              <div class="map-loading" aria-live="polite">
+                <div class="spinner" aria-hidden="true"></div>
+                <p>Initializing map…</p>
+              </div>
+            }
 
-            <div class="map-error" *ngIf="loadError()" role="alert">
-              <p>Map could not be loaded. {{ loadError() }}</p>
-              <p class="text-muted small">
-                Check that <code>googleMapsApiKey</code> and <code>googleMapsMapId</code> are configured for this build.
-              </p>
-            </div>
+            @if (loadError()) {
+              <div class="map-error" role="alert">
+                <p>Map could not be loaded. {{ loadError() }}</p>
+                <p class="text-muted small">
+                  Check that <code>googleMapsApiKey</code> and <code>googleMapsMapId</code> are
+                  configured for this build.
+                </p>
+              </div>
+            }
           </div>
 
-          <div class="overlay-top-right" *ngIf="!isLoading() && !loadError()">
-            <ul class="legend glass animate-fade-in" role="list">
-              <li class="legend-item"><span class="dot quiet" aria-hidden="true"></span> Quiet zone</li>
-              <li class="legend-item"><span class="dot busy" aria-hidden="true"></span> High density</li>
-            </ul>
-          </div>
+          @if (!isLoading() && !loadError()) {
+            <div class="overlay-top-right">
+              <ul class="legend glass animate-fade-in" role="list">
+                <li class="legend-item">
+                  <span class="dot quiet" aria-hidden="true"></span> Quiet zone
+                </li>
+                <li class="legend-item">
+                  <span class="dot busy" aria-hidden="true"></span> High density
+                </li>
+              </ul>
+            </div>
+          }
         </main>
 
         <aside class="route-panel glass-card" aria-labelledby="dest-heading">
@@ -75,137 +88,300 @@ import { WayfindingService, type Zone } from '../../core/services/wayfinding.ser
 
           <label for="route-search" class="visually-hidden">Search rooms or booths</label>
           <div class="search-box glass">
-            <input id="route-search"
-                   type="text"
-                   placeholder="Search rooms, booths, or exits…"
-                   [value]="searchQuery()"
-                   (input)="searchQuery.set($any($event.target).value)" />
+            <input
+              id="route-search"
+              type="text"
+              placeholder="Search rooms, booths, or exits…"
+              [value]="searchQuery()"
+              (input)="searchQuery.set($any($event.target).value)"
+            />
           </div>
 
           <ul class="suggested-routes" role="list">
-            <li *ngFor="let zone of filteredZones()">
-              <button type="button"
-                      class="route-option glass"
-                      [class.selected]="selectedRoom() === zone.id"
-                      [attr.aria-pressed]="selectedRoom() === zone.id"
-                      (click)="focusZone(zone)">
-                <span class="route-meta">
-                  <span class="title">{{ zone.id | titlecase }}</span>
-                  <span class="est">{{ zone.isQuietZone ? 'Quiet' : 'Standard' }} area</span>
-                </span>
-                <span class="tag" *ngIf="sensoryMode() && zone.isQuietZone">Recommended</span>
-              </button>
-            </li>
-            <li *ngIf="!filteredZones().length" class="text-muted">No zones match that search.</li>
+            @for (zone of filteredZones(); track zone.id) {
+              <li>
+                <button
+                  type="button"
+                  class="route-option glass"
+                  [class.selected]="selectedRoom() === zone.id"
+                  [attr.aria-pressed]="selectedRoom() === zone.id"
+                  (click)="focusZone(zone)"
+                >
+                  <span class="route-meta">
+                    <span class="title">{{ zone.id | titlecase }}</span>
+                    <span class="est">{{ zone.isQuietZone ? 'Quiet' : 'Standard' }} area</span>
+                  </span>
+                  @if (sensoryMode() && zone.isQuietZone) {
+                    <span class="tag">Recommended</span>
+                  }
+                </button>
+              </li>
+            }
+            @if (!filteredZones().length) {
+              <li class="text-muted">No zones match that search.</li>
+            }
           </ul>
 
-          <p class="sensory-info" *ngIf="sensoryMode()">
-            Sensitive triggers are hidden. Showing quietest routes and low-density areas.
-          </p>
+          @if (sensoryMode()) {
+            <p class="sensory-info">
+              Sensitive triggers are hidden. Showing quietest routes and low-density areas.
+            </p>
+          }
 
-          <section class="ai-advice glass" *ngIf="selectedZoneAdvice()" aria-live="polite">
-            <header class="ai-header">
-              <span class="ai-title">AI sensory concierge</span>
-            </header>
-            <p class="advice-text">{{ selectedZoneAdvice() }}</p>
-          </section>
+          @if (selectedZoneAdvice()) {
+            <section class="ai-advice glass" aria-live="polite">
+              <header class="ai-header">
+                <span class="ai-title">AI sensory concierge</span>
+              </header>
+              <p class="advice-text">{{ selectedZoneAdvice() }}</p>
+            </section>
+          }
         </aside>
       </div>
     </div>
   `,
-  styles: [`
-    .wayfinding-container { display: flex; flex-direction: column; gap: 24px; }
-    .visually-hidden {
-      position: absolute; width: 1px; height: 1px;
-      padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0);
-      white-space: nowrap; border: 0;
-    }
+  styles: [
+    `
+      .wayfinding-container {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
 
-    .map-header { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+      .map-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
 
-    .sensory-btn {
-      background: var(--glass-bg);
-      border: 1px solid var(--glass-border);
-      color: var(--text-primary);
-      padding: 12px 24px;
-    }
-    .sensory-btn.active {
-      border-color: var(--accent);
-      background: rgba(16,185,129,.1);
-      box-shadow: 0 0 20px rgba(16,185,129,.2);
-    }
-    .sensory-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+      .sensory-btn {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        color: var(--text-primary);
+        padding: 12px 24px;
+      }
+      .sensory-btn.active {
+        border-color: var(--accent);
+        background: rgba(16, 185, 129, 0.1);
+        box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+      }
+      .sensory-btn:focus-visible {
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
+      }
 
-    .map-layout { display: grid; grid-template-columns: 1fr 340px; gap: 24px; }
-    .map-viewport { height: 600px; padding: 0; overflow: hidden; display: flex; position: relative; }
-    .interactive-map { flex: 1; position: relative; background: #0a0a0c; }
+      .map-layout {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 24px;
+      }
+      .map-viewport {
+        height: 600px;
+        padding: 0;
+        overflow: hidden;
+        display: flex;
+        position: relative;
+      }
+      .interactive-map {
+        flex: 1;
+        position: relative;
+        background: #0a0a0c;
+      }
 
-    .map-loading, .map-error {
-      position: absolute; inset: 0;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 16px; background: var(--bg-main); z-index: 10; padding: 24px; text-align: center;
-    }
-    .map-error code { color: var(--primary); }
-    .small { font-size: .8rem; }
+      .map-loading,
+      .map-error {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        background: var(--bg-main);
+        z-index: 10;
+        padding: 24px;
+        text-align: center;
+      }
+      .map-error code {
+        color: var(--primary);
+      }
+      .small {
+        font-size: 0.8rem;
+      }
 
-    .spinner {
-      width: 40px; height: 40px;
-      border: 3px solid var(--glass-border); border-top-color: var(--primary);
-      border-radius: 50%; animation: spin 1s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid var(--glass-border);
+        border-top-color: var(--primary);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
 
-    .overlay-top-right { position: absolute; top: 20px; right: 20px; z-index: 5; }
-    .legend { padding: 12px; font-size: .85rem; display: flex; flex-direction: column; gap: 8px; list-style: none; margin: 0; }
-    .legend-item { display: flex; align-items: center; gap: 8px; }
-    .dot { width: 8px; height: 8px; border-radius: 50%; }
-    .dot.quiet { background: var(--accent); }
-    .dot.busy { background: var(--danger); }
+      .overlay-top-right {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 5;
+      }
+      .legend {
+        padding: 12px;
+        font-size: 0.85rem;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        list-style: none;
+        margin: 0;
+      }
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
+      .dot.quiet {
+        background: var(--accent);
+      }
+      .dot.busy {
+        background: var(--danger);
+      }
 
-    .route-panel { padding: 24px; display: flex; flex-direction: column; gap: 20px; }
-    .search-box input { width: 100%; background: transparent; border: none; padding: 12px; color: var(--text-primary); outline: none; }
+      .route-panel {
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+      .search-box input {
+        width: 100%;
+        background: transparent;
+        border: none;
+        padding: 12px;
+        color: var(--text-primary);
+        outline: none;
+      }
 
-    .suggested-routes { display: flex; flex-direction: column; gap: 12px; padding: 0; margin: 0; list-style: none; }
-    .route-option {
-      width: 100%; padding: 16px; cursor: pointer;
-      display: flex; justify-content: space-between; align-items: center;
-      border: 1px solid transparent; transition: all .2s;
-      background: var(--glass-bg); color: inherit;
-      text-align: left;
-    }
-    .route-option:hover { border-color: var(--primary); }
-    .route-option:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
-    .route-option.selected { border-color: var(--accent); background: rgba(16,185,129,.05); }
-    .route-meta { display: flex; flex-direction: column; }
-    .route-meta .title { font-weight: 500; font-size: .95rem; }
-    .route-meta .est { font-size: .8rem; color: var(--text-muted); }
+      .suggested-routes {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 0;
+        margin: 0;
+        list-style: none;
+      }
+      .route-option {
+        width: 100%;
+        padding: 16px;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border: 1px solid transparent;
+        transition: all 0.2s;
+        background: var(--glass-bg);
+        color: inherit;
+        text-align: left;
+      }
+      .route-option:hover {
+        border-color: var(--primary);
+      }
+      .route-option:focus-visible {
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
+      }
+      .route-option.selected {
+        border-color: var(--accent);
+        background: rgba(16, 185, 129, 0.05);
+      }
+      .route-meta {
+        display: flex;
+        flex-direction: column;
+      }
+      .route-meta .title {
+        font-weight: 500;
+        font-size: 0.95rem;
+      }
+      .route-meta .est {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+      }
 
-    .tag {
-      font-size: .7rem; background: var(--accent); color: white;
-      padding: 2px 8px; border-radius: var(--radius-sm); font-weight: 700;
-    }
+      .tag {
+        font-size: 0.7rem;
+        background: var(--accent);
+        color: white;
+        padding: 2px 8px;
+        border-radius: var(--radius-sm);
+        font-weight: 700;
+      }
 
-    .sensory-info {
-      margin-top: auto; padding-top: 20px;
-      border-top: 1px solid var(--glass-border);
-      font-size: .8rem; color: var(--text-secondary);
-    }
+      .sensory-info {
+        margin-top: auto;
+        padding-top: 20px;
+        border-top: 1px solid var(--glass-border);
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+      }
 
-    .ai-advice {
-      padding: 16px; margin-top: 16px;
-      border: 1px dashed var(--primary);
-      background: rgba(99,102,241,.05);
-      border-radius: var(--radius-sm);
-    }
-    .ai-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-    .ai-title { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--primary); }
-    .advice-text { font-size: .85rem; line-height: 1.4; color: var(--text-secondary); font-style: italic; }
+      .ai-advice {
+        padding: 16px;
+        margin-top: 16px;
+        border: 1px dashed var(--primary);
+        background: rgba(99, 102, 241, 0.05);
+        border-radius: var(--radius-sm);
+      }
+      .ai-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      .ai-title {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--primary);
+      }
+      .advice-text {
+        font-size: 0.85rem;
+        line-height: 1.4;
+        color: var(--text-secondary);
+        font-style: italic;
+      }
 
-    @media (max-width: 1000px) {
-      .map-layout { grid-template-columns: 1fr; }
-      .map-viewport { height: 420px; }
-    }
-  `],
+      @media (max-width: 1000px) {
+        .map-layout {
+          grid-template-columns: 1fr;
+        }
+        .map-viewport {
+          height: 420px;
+        }
+      }
+    `,
+  ],
 })
 export class WayfindingComponent implements AfterViewInit {
   @ViewChild('mapContainer') mapContainer!: ElementRef<HTMLDivElement>;
@@ -255,8 +431,9 @@ export class WayfindingComponent implements AfterViewInit {
 
     try {
       const { Map } = (await importLibrary('maps')) as google.maps.MapsLibrary;
-      const { AdvancedMarkerElement, PinElement } =
-        (await importLibrary('marker')) as google.maps.MarkerLibrary;
+      const { AdvancedMarkerElement, PinElement } = (await importLibrary(
+        'marker',
+      )) as google.maps.MarkerLibrary;
 
       this.map = new Map(this.mapContainer.nativeElement, {
         center: { lat: 37.7749, lng: -122.4194 },
