@@ -1,0 +1,14 @@
+# .gcloudignore
+# Keep .env in the build context so setup-env.mjs can read it
+!.env
+
+# Ignore node_modules and other bulky folders
+node_modules/
+.angular/
+dist/
+.git/
+.github/
+.vscode/
+e2e/
+*.md
+test_out*.txt

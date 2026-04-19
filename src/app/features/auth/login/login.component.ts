@@ -55,7 +55,7 @@ import { getFirebaseErrorMessage } from '../../../core/utils/validators';
           </div>
 
           <button [disabled]="loginForm.invalid || isLoading" type="submit" class="glass-button w-full mt-6">
-            {{ isLoading ? 'Signing in...' : 'Sign In' }}
+            {{ isLoading ? 'Verifying security...' : 'Sign In' }}
           </button>
 
           <div class="divider-text mt-6">
@@ -70,6 +70,15 @@ import { getFirebaseErrorMessage } from '../../../core/utils/validators';
           <div class="text-center mt-6 text-sm">
             <span class="text-secondary">Don't have an account? </span>
             <a routerLink="/register" class="gradient-text font-bold">Register</a>
+          </div>
+
+          <!-- reCAPTCHA Branding -->
+          <div class="recaptcha-footer mt-8">
+            <p class="text-muted text-center">
+              This site is protected by reCAPTCHA Enterprise and the Google 
+              <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Privacy Policy</a> and
+              <a href="https://policies.google.com/terms" target="_blank" rel="noopener">Terms of Service</a> apply.
+            </p>
           </div>
         </form>
       </div>
@@ -165,6 +174,20 @@ import { getFirebaseErrorMessage } from '../../../core/utils/validators';
       background: rgba(255, 255, 255, 0.1);
       border-color: var(--primary) !important;
     }
+    .recaptcha-footer {
+      font-size: 0.7rem;
+      line-height: 1.4;
+      opacity: 0.7;
+    }
+    .recaptcha-footer a {
+      color: var(--primary);
+      text-decoration: underline;
+      transition: opacity 0.2s;
+    }
+    .recaptcha-footer a:hover {
+      opacity: 1;
+    }
+    .mt-8 { margin-top: 2rem; }
   `]
 })
 export class LoginComponent {

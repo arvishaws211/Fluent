@@ -19,7 +19,7 @@
     "functions:deploy": "firebase deploy --only functions",
     "emulators": "firebase emulators:start",
     "deploy:hosting": "firebase deploy --only hosting",
-    "deploy:run": "gcloud run deploy fluent-app --source . --project fluent-fcacc --allow-unauthenticated --region us-central1 --quiet"
+    "deploy:run": "gcloud run deploy fluent-app --source . --project fluent-493613 --allow-unauthenticated --region us-central1 --quiet"
   },
   "private": true,
   "packageManager": "npm@11.6.2",
