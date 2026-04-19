@@ -42,6 +42,24 @@ jobs:
             functions/node_modules
           key: ${{ runner.os }}-nm-${{ hashFiles('**/package-lock.json') }}
 
+  quality-gates:
+    name: lint + format + stylelint
+    runs-on: ubuntu-latest
+    needs: install
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --legacy-peer-deps
+      - name: ESLint (max-warnings=0)
+        run: npm run lint
+      - name: Prettier check
+        run: npm run format:check
+      - name: Stylelint
+        run: npm run stylelint
+
   lint-build:
     name: typecheck + build
     runs-on: ubuntu-latest
@@ -55,6 +73,8 @@ jobs:
       - run: npm ci --legacy-peer-deps
       - name: Materialize placeholder env files
         run: npm run setup:env
+      - name: TypeScript type-check
+        run: npm run typecheck
       - name: Production build
         run: npm run build -- --configuration=production
       - name: Build Cloud Functions
