@@ -249,15 +249,16 @@ import {
       .recaptcha-footer {
         font-size: 0.7rem;
         line-height: 1.4;
-        opacity: 0.7;
+        color: var(--text-secondary);
       }
       .recaptcha-footer a {
-        color: var(--primary);
+        color: #a5b4fc;
         text-decoration: underline;
-        transition: opacity 0.2s;
+        transition: color 0.2s;
       }
-      .recaptcha-footer a:hover {
-        opacity: 1;
+      .recaptcha-footer a:hover,
+      .recaptcha-footer a:focus-visible {
+        color: var(--text-primary);
       }
     `,
   ],

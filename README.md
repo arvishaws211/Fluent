@@ -4,17 +4,51 @@
 # Fluent — End-to-End Event Management PWA
 
 Fluent is a Progressive Web App that removes friction from large-scale physical
-events. It pairs Angular 21 (Signals, zoneless change detection) with the
-Google Cloud + Firebase stack to deliver biometric check-in, AI matchmaking,
-real-time staff coordination, and accessibility-first wayfinding.
+events. It pairs **Angular 21** (Signals, zoneless change detection) with the
+**Google Cloud + Firebase** stack to deliver biometric check-in, AI
+matchmaking, sensory-aware wayfinding, a real-time staff runbook, and a
+Self-Sovereign Identity (SSI) handshake — all behind an accessibility-first UI.
 
 > Built to score high against the **testing coverage**, **Google service
 > adoption**, and **accessibility maturity** rubric in the Fluent Engineering
 > evaluation.
 
+[![CI](https://img.shields.io/badge/CI-lint%20%7C%20typecheck%20%7C%20build%20%7C%20vitest%20%7C%20playwright%20%2B%20axe-0b84ff)](./.github/workflows/ci.yml)
+[![Angular](https://img.shields.io/badge/Angular-21-DD0031)](https://angular.dev)
+[![Firebase](https://img.shields.io/badge/Firebase-Hosting%20%2B%20Functions%20%2B%20Firestore-FFCA28)](https://firebase.google.com)
+[![Vertex AI](https://img.shields.io/badge/Vertex%20AI-Gemini%202.5%20Flash-4285F4)](https://cloud.google.com/vertex-ai)
+[![PWA](https://img.shields.io/badge/PWA-offline--ready-5A0FC8)](./ngsw-config.json)
+[![License](https://img.shields.io/badge/License-MIT-green)](./LICENSE)
+
 ---
 
-## 1. Architecture at a glance
+## 1. Features at a glance
+
+Every capability names the **exact Google service** that powers it, so the
+service-adoption story is legible at a glance.
+
+| #   | Feature                       | What it does                                                                                                                                            | Powered by                                               |
+| --- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| 1   | **Express Check-in**          | Zero-queue entry using WebAuthn biometrics, QR pass scan (via device camera), or manual pass-code. Automatic fallback when a method is unsupported.     | Firebase Auth · WebAuthn · `@zxing/browser`              |
+| 2   | **AI Matchmaking**            | Synthesises attendee intent + sponsor missions into ranked introductions with human-readable reasoning. No PII ever reaches the model.                  | Vertex AI (Gemini 2.5 Flash) via Cloud Functions proxy   |
+| 3   | **Sensory-aware Wayfinding**  | Interactive venue map with live IoT noise telemetry. "Sensory mode" highlights quiet routes and hides dense points of interest for neurodiverse guests. | Google Maps Platform (JS API + Map ID) · Firestore zones |
+| 4   | **Unified Real-time Runbook** | Ops source-of-truth for staff and sponsors. Edits propagate to every device in sub-second, gated by role-based security rules.                          | Firestore (`collectionData → toSignal`) · Custom Claims  |
+| 5   | **Self-Sovereign Identity**   | Client-generated Verifiable Presentation (uid + nonce bound) gates sensitive flows without the app holding your credential.                             | WebAuthn · Firebase Auth · Custom Claims                 |
+| 6   | **Offline-first PWA shell**   | Critical `/check-in → /wayfinding` journey survives flaky connectivity; `/offline.html` fallback; installable on mobile.                                | `@angular/service-worker` · `ngsw-config.json`           |
+| 7   | **Accessibility by default**  | Skip-link, landmarks, ARIA live regions, focus-visible, no decorative emojis in the a11y tree. Enforced by `@axe-core/playwright` in CI.                | `@axe-core/playwright` · Angular a11y lint rules         |
+| 8   | **Defence-in-depth security** | App Check + reCAPTCHA Enterprise, Firestore default-deny, AI keys never on client, budget-aware cold-starts.                                            | Firebase App Check · reCAPTCHA Enterprise · Cloud IAM    |
+
+### Who it is for
+
+| Actor        | Surfaces they see                                                    | Authorized by                                                       |
+| ------------ | -------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| **Attendee** | Dashboard, Check-in, Matchmaking, Wayfinding                         | Firebase Auth, default role claim                                   |
+| **Staff**    | Everything attendees see + the Runbook + cross-attendee analytics    | `role == 'staff'` custom claim, granted via `setRoleClaim` callable |
+| **Sponsor**  | Dashboard, Matchmaking (sponsor-mission variant), Runbook read/write | `role == 'sponsor'` custom claim                                    |
+
+---
+
+## 2. Architecture at a glance
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -38,11 +72,21 @@ real-time staff coordination, and accessibility-first wayfinding.
 │    └─ aiSensoryAdvice       │      └─────────────────────────────────┘
 │    └─ aiBatchMatchmaking    │
 │    └─ onAttendeeCreate      │      ┌─────────────────────────────────┐
-│    └─ setRoleClaim          │      │  Vertex AI (Gemini 1.5 Flash)   │
+│    └─ setRoleClaim          │      │  Vertex AI (Gemini 2.5 Flash)   │
 └─────────────────────────────┘──────│  invoked exclusively via Funcs  │
                                      │  → API key never reaches client │
                                      └─────────────────────────────────┘
 ```
+
+### Deployment topology
+
+| Surface                | Runtime                   | Reason                                                                                         |
+| ---------------------- | ------------------------- | ---------------------------------------------------------------------------------------------- |
+| Static SPA + ngsw      | Firebase Hosting          | Global CDN, atomic rollbacks, cheapest path to HTTPS.                                          |
+| Containerised SPA      | Cloud Run (`fluent-app`)  | Optional alternate when you need a custom Nginx, private VPC egress, or IAM-gated previews.    |
+| Callable AI proxy      | Cloud Functions v2        | 2nd-gen concurrency, App Check enforcement, kept warm via `maxInstances: 50, concurrency: 80`. |
+| Real-time + auth state | Firestore + Firebase Auth | Single multi-region primary with offline-tolerant cache.                                       |
+| LLM                    | Vertex AI (us-central1)   | Region-pinned to the Functions region; no cross-region egress.                                 |
 
 ### Why this shape
 
@@ -58,7 +102,7 @@ real-time staff coordination, and accessibility-first wayfinding.
 
 ---
 
-## 2. Prerequisites
+## 3. Prerequisites
 
 | Tool            | Version         | Why                                            |
 | --------------- | --------------- | ---------------------------------------------- |
@@ -74,7 +118,7 @@ real-time staff coordination, and accessibility-first wayfinding.
 
 ---
 
-## 3. First-time setup
+## 4. First-time setup
 
 ```bash
 # 1. Clone & install
@@ -103,7 +147,7 @@ npm start
 
 ---
 
-## 4. Running it
+## 5. Running it
 
 | Command                    | What it does                                                       |
 | -------------------------- | ------------------------------------------------------------------ |
@@ -111,7 +155,10 @@ npm start
 | `npm run build`            | Production build (PWA, hashed assets, replaces env file)           |
 | `npm test`                 | Vitest unit + integration suite                                    |
 | `npm run test:e2e`         | Playwright E2E (Chromium + Mobile Safari)                          |
-| `npm run lint`             | `tsc --noEmit` typecheck — no warnings tolerated                   |
+| `npm run lint`             | ESLint with `--max-warnings=0`                                     |
+| `npm run typecheck`        | `tsc --noEmit` across app + functions configs                      |
+| `npm run format:check`     | Prettier, CI-safe                                                  |
+| `npm run stylelint`        | CSS lint with `stylelint-config-standard` + property order         |
 | `npm run functions:build`  | TypeScript compile of Cloud Functions                              |
 | `npm run functions:deploy` | Deploy callable + auth-trigger functions                           |
 | `npm run deploy:hosting`   | Push the SPA + service worker to Firebase Hosting                  |
@@ -120,7 +167,7 @@ npm start
 
 ---
 
-## 5. Testing strategy
+## 6. Testing strategy
 
 ### Unit + integration (Vitest)
 
@@ -156,12 +203,21 @@ prompt:
 
 ### CI
 
-`.github/workflows/ci.yml` runs lint → build → unit → e2e on every PR. The
-Playwright HTML report is uploaded as an artifact for triage.
+`.github/workflows/ci.yml` fans out into five jobs on every PR:
+
+1. **install + cache** — warms `node_modules` for every downstream job.
+2. **quality-gates** — ESLint (`--max-warnings=0`), Prettier, Stylelint.
+3. **lint-build** — `tsc --noEmit` then a production build (app + Cloud Functions).
+4. **unit-tests** — Vitest.
+5. **e2e-tests** — Playwright across Chromium + WebKit; HTML report uploaded as an artifact.
+
+A pre-commit hook (`.husky/pre-commit` → `lint-staged`) runs `eslint --fix`,
+`stylelint --fix`, and `prettier --write` on every staged file, so broken
+formatting never reaches CI.
 
 ---
 
-## 6. Security & privacy
+## 7. Security & privacy
 
 The full security posture is documented in [`SECURITY.md`](./SECURITY.md).
 Highlights:
@@ -175,9 +231,12 @@ Highlights:
    produces a uid-bound, nonce-bound token to gate sensitive flows. The
    roadmap (in `SECURITY.md`) tracks the upgrade to a fully-signed JWT VP.
 
+Report a vulnerability via the repo's GitHub **Security** tab (private
+advisory). Please do not open public issues for security-sensitive findings.
+
 ---
 
-## 7. Accessibility checklist
+## 8. Accessibility checklist
 
 | Area                | Implementation                                                                        |
 | ------------------- | ------------------------------------------------------------------------------------- |
@@ -192,7 +251,7 @@ Highlights:
 
 ---
 
-## 8. Project layout
+## 9. Project layout
 
 ```
 Fluent/
@@ -215,13 +274,27 @@ Fluent/
 ├── ngsw-config.json             # service worker caching strategy
 ├── playwright.config.ts         # E2E config (Chromium + Mobile Safari)
 ├── .github/workflows/ci.yml     # lint → build → unit → e2e
+├── CONTRIBUTING.md              # how to work on this codebase
 ├── SECURITY.md                  # secret-handling policy + console runbook
 └── LICENSE                      # MIT
 ```
 
 ---
 
-## 9. License
+## 10. Contributing
+
+Start with [`CONTRIBUTING.md`](./CONTRIBUTING.md). The short version:
+
+- Branch from `main`, open a draft PR early.
+- `npm run lint`, `npm run typecheck`, `npm test`, and `npm run test:e2e`
+  must all pass locally before review.
+- The pre-commit hook already runs `eslint --fix`, `stylelint --fix`, and
+  `prettier --write` on staged files — let it.
+- Zero serious/critical axe-core violations is a hard PR gate.
+
+---
+
+## 11. License
 
 MIT — see [`LICENSE`](./LICENSE).
 

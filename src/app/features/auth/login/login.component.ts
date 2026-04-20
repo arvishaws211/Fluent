@@ -220,7 +220,7 @@ import { getFirebaseErrorMessage, extractFirebaseErrorCode } from '../../../core
         display: flex;
         align-items: center;
         text-align: center;
-        color: var(--text-muted);
+        color: var(--text-secondary);
         font-size: 0.8rem;
       }
       .divider-text::before,
@@ -250,15 +250,16 @@ import { getFirebaseErrorMessage, extractFirebaseErrorCode } from '../../../core
       .recaptcha-footer {
         font-size: 0.7rem;
         line-height: 1.4;
-        opacity: 0.7;
+        color: var(--text-secondary);
       }
       .recaptcha-footer a {
-        color: var(--primary);
+        color: #a5b4fc;
         text-decoration: underline;
-        transition: opacity 0.2s;
+        transition: color 0.2s;
       }
-      .recaptcha-footer a:hover {
-        opacity: 1;
+      .recaptcha-footer a:hover,
+      .recaptcha-footer a:focus-visible {
+        color: var(--text-primary);
       }
       .mt-8 {
         margin-top: 2rem;
